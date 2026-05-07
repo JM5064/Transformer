@@ -1,48 +1,70 @@
 import re, collections
 
 
-def get_stats(vocab):
+def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
     pairs = collections.defaultdict(int)
 
-    for word, freq in vocab.items():
-        symbols = word.split()
-
-        for i in range(len(symbols)-1):
-            pairs[symbols[i],symbols[i+1]] += freq
+    for i in range(len(chars) - 1):
+        pairs[chars[i], chars[i + 1]] += 1
 
     return pairs
 
 
-def merge_vocab(pair, v_in):
-    v_out = {}
-    bigram = re.escape(' '.join(pair))
-    p = re.compile(r'(?<!\S)' + bigram + r'(?!\S)')
+def merge_pair(
+    pair: tuple[str, str], pair_freq: int, chars: list[str], vocab: dict[str, int]
+) -> list[str]:
+    merged = "".join(pair)
+    new_chars = []
 
-    for word in v_in:
-        w_out = p.sub(''.join(pair), word)
-        v_out[w_out] = v_in[word]
+    i = 0
+    while i < len(chars):
+      if i+1 < len(chars) and (chars[i], chars[i+1]) == pair:
+        new_chars.append(merged)
+        vocab[chars[i]] -= 1
+        vocab[chars[i+1]] -= 1
+        vocab[merged] += 1
+        i += 1
+      else:
+        new_chars.append(chars[i])
+      i += 1
 
-    return v_out
-
-
-sentence = 'Robert Boulter is an English film , television and theatre actor . He had a guest @-@ starring role on the television series The Bill in 2000 . This was followed by a starring role in the play Herons written by Simon Stephens , which was performed in 2001 at the Royal Court Theatre . He had a guest role in the television series Judge John Deed in 2002 . In 2004 Boulter landed a role as " Craig " in the episode " Teddy \'s Story " of the television series The Long Firm ; he starred alongside actors Mark Strong and Derek Jacobi . He was cast in the 2005 theatre productions of the Philip Ridley play Mercury Fur , which was performed at the Drum Theatre in Plymouth and the Menier Chocolate Factory in London . He was directed by John Tiffany and starred alongside Ben Whishaw , Shane Zaza , Harry Kent , Fraser Ayres , Sophie Stanton and Dominic Hall'
-sentence_split = sentence.split(" ")
-
-vocab = {}
-for word in sentence_split:
-    word = " ".join(word)
-    if word in vocab:
-        vocab[word] += 1
-    else:
-        vocab[word] = 1
+    return new_chars
 
 
-num_merges = 100
-for i in range(num_merges):
-    pairs = get_stats(vocab)
-    # print(pairs)
-    best = max(pairs, key=pairs.get)
-    vocab = merge_vocab(best, vocab)
-    print(best)
+def split_chars(text: str) -> list[str]:
+    chars = list(text)
 
-print(vocab)
+    # add BOW, EOW markers
+    sym = ".,:@- !?;[]()+=&%$#/\"'"
+    if chars[0] not in sym:
+        chars[0] = "_" + chars[0]
+    for i in range(1, len(chars) - 1):
+        if chars[i] in sym:
+            continue
+        if chars[i - 1] == " ":
+            chars[i] = "_" + chars[i]
+        if chars[i + 1] == " ":
+            chars[i] = chars[i] + "_"
+    if chars[-1] not in sym:
+        chars[-1] = chars[-1] + "_"
+
+    return chars
+
+
+def get_vocab(chars: list[str]) -> dict[str, int]:
+    vocab = collections.defaultdict(int)
+
+    for char in chars:
+        vocab[char] += 1
+
+    return vocab
+
+
+def bpe(text, num_merges):
+    chars = split_chars(text)
+    vocab = get_vocab(chars)
+    for _ in range(num_merges):
+        pairs = get_pairs(chars)
+        best_pair = max(pairs, key=pairs.get)
+        chars = merge_pair(best_pair, pairs[best_pair], chars, vocab)
+    return chars, vocab

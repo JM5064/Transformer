@@ -1,6 +1,9 @@
+import collections
+import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
 
+import bpe
 
 class WikiText2(Dataset):
 
@@ -14,29 +17,25 @@ class WikiText2(Dataset):
         else:
             self.df = pd.read_parquet('data/wikitext2/test-00000-of-00001.parquet')
 
-        self.data = []
-        self.create_data(min_length=50)
+        self.create_data(min_length=50, num_merges=100)
         
-        for i in range(len(self.data)):
-            print(self.data[i])
-            print()
+    def create_data(self, min_length, num_merges):
+        # convert to array of arrays
+        self.arr = self.df.to_numpy()
 
-
-    def create_data(self, min_length):
-
-        for row in self.df.itertuples():
-            text = row.text
-
-            if len(text) < min_length:
+        # merge all text values
+        all_text = ""
+        for item in self.arr:
+            text = item[0]
+            if text == "" or len(text) < min_length:
                 continue
+            stripped_text = text.strip("\n")
+            all_text += stripped_text
+            all_text = all_text.strip()
 
-            stripped_text = text.strip('\n')
-
-            self.data.append(stripped_text)
-
-
-    def __getitem__(self, index):
-        return self.data[index]
+        self.tokenized_text, self.vocab = bpe.bpe(all_text, num_merges)
+        print(self.tokenized_text)
+        print(self.vocab)
 
 
 if __name__ == "__main__":
