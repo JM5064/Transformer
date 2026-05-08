@@ -1,4 +1,5 @@
 import re, collections
+import time
 
 
 def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
@@ -10,23 +11,45 @@ def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
     return pairs
 
 
-def merge_pair(
-    pair: tuple[str, str], pair_freq: int, chars: list[str], vocab: dict[str, int]
-) -> list[str]:
+def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], pairs: dict[tuple[str, str], int]) -> list[str]:
     merged = "".join(pair)
     new_chars = []
 
+    # Remove pair from pairs
+    del pairs[pair]
+
     i = 0
     while i < len(chars):
-      if i+1 < len(chars) and (chars[i], chars[i+1]) == pair:
-        new_chars.append(merged)
-        vocab[chars[i]] -= 1
-        vocab[chars[i+1]] -= 1
-        vocab[merged] += 1
+        if i+1 < len(chars) and (chars[i], chars[i+1]) == pair:
+            new_chars.append(merged)
+            vocab[chars[i]] -= 1
+            vocab[chars[i+1]] -= 1
+            vocab[merged] += 1
+
+            # Update previous and next pairs with merged pair
+            if i-1 >= 0:
+                prev_pair = (chars[i-1], chars[i])
+                new_pair = (chars[i-1], merged)
+
+                pairs[prev_pair] -= 1
+                pairs[new_pair] += 1
+
+                if pairs[prev_pair] == 0:
+                    del pairs[prev_pair]
+            if i + 2 < len(chars):
+                prev_pair = (chars[i+1], chars[i+2])
+                new_pair = (merged, chars[i+2])
+
+                pairs[prev_pair] -= 1
+                pairs[new_pair] += 1
+
+                if pairs[prev_pair] == 0:
+                    del pairs[prev_pair]
+
+            i += 1
+        else:
+            new_chars.append(chars[i])
         i += 1
-      else:
-        new_chars.append(chars[i])
-      i += 1
 
     return new_chars
 
@@ -52,10 +75,7 @@ def split_chars(text: str) -> list[str]:
 
 
 def get_vocab(chars: list[str]) -> dict[str, int]:
-    vocab = collections.defaultdict(int)
-
-    for char in chars:
-        vocab[char] += 1
+    vocab = collections.Counter(chars)
 
     return vocab
 
@@ -63,8 +83,15 @@ def get_vocab(chars: list[str]) -> dict[str, int]:
 def bpe(text, num_merges):
     chars = split_chars(text)
     vocab = get_vocab(chars)
-    for _ in range(num_merges):
-        pairs = get_pairs(chars)
+    pairs = get_pairs(chars)
+
+    for i in range(num_merges):
+        s = time.time()
+
         best_pair = max(pairs, key=pairs.get)
-        chars = merge_pair(best_pair, pairs[best_pair], chars, vocab)
+
+        chars = merge_pair(best_pair, chars, vocab, pairs)
+        
+        print("Merge ", i, "took", (time.time() - s) * 1000, "ms\n")
+
     return chars, vocab
