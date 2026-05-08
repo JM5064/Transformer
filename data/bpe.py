@@ -26,6 +26,11 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
             vocab[chars[i+1]] -= 1
             vocab[merged] += 1
 
+            if vocab[chars[i]] == 0:
+                del vocab[chars[i]]
+            if vocab[chars[i+1]] == 0:
+                del vocab[chars[i+1]]
+
             # Update previous and next pairs with merged pair
             if i-1 >= 0:
                 prev_pair = (chars[i-1], chars[i])
@@ -57,7 +62,14 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
 def split_chars(text_arr: list[str]) -> list[str]:
     chars = []
     for t in text_arr:
-        chars.extend(t.split())
+        # Filter for unicode characters up to greek and coptic
+        for c in t:
+            if ord(c) <= 1023:
+                chars.append(c)
+            else:
+                # Unknown character
+                chars.append('<unk>')
+        # chars.extend(list(t))
 
     # add BOW, EOW markers
     # sym = ".,:@- !?;[]()+=&%$#/\"'"
@@ -82,8 +94,17 @@ def get_vocab(chars: list[str]) -> dict[str, int]:
     return vocab
 
 
+def save_vocab(vocab, vocab_file):
+    with open(vocab_file, 'a') as file:
+        file.write('token,count\n')
+        for key, value in vocab.items():
+            file.write(f'{key},{value}\n')
+
+
 def bpe(text, num_merges):
+    s = time.time()
     chars = split_chars(text)
+    print("Splitting chars took", (time.time() - s) * 1000, "ms")
     vocab = get_vocab(chars)
     pairs = get_pairs(chars)
 
@@ -94,6 +115,6 @@ def bpe(text, num_merges):
 
         chars = merge_pair(best_pair, chars, vocab, pairs)
         
-        print("Merge ", i, "took", (time.time() - s) * 1000, "ms\n")
+        print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
 
     return chars, vocab
