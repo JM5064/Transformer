@@ -20,20 +20,14 @@ class WikiText2(Dataset):
         self.create_data(min_length=50, num_merges=100)
         
     def create_data(self, min_length, num_merges):
-        # convert to array of arrays
-        self.arr = self.df.to_numpy()
+        # convert to array of paragraphs
+        temp_arr = self.df.loc[:,"text"].to_list()
+        
+        # remove empty/very short paragraphs
+        self.arr = [t.strip("\n") for t in temp_arr if len(t) < min_length and t != ""]
 
-        # merge all text values
-        all_text = ""
-        for item in self.arr:
-            text = item[0]
-            if text == "" or len(text) < min_length:
-                continue
-            stripped_text = text.strip("\n")
-            all_text += stripped_text
-            all_text = all_text.strip()
-
-        self.tokenized_text, self.vocab = bpe.bpe(all_text, num_merges)
+        self.tokenized_text, self.vocab = bpe.bpe(self.arr, num_merges)
+        
         print(self.tokenized_text)
         print(self.vocab)
 

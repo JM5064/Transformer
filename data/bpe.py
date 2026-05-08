@@ -54,22 +54,24 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
     return new_chars
 
 
-def split_chars(text: str) -> list[str]:
-    chars = list(text)
+def split_chars(text_arr: list[str]) -> list[str]:
+    chars = []
+    for t in text_arr:
+        chars.extend(t.split())
 
     # add BOW, EOW markers
-    sym = ".,:@- !?;[]()+=&%$#/\"'"
-    if chars[0] not in sym:
-        chars[0] = "_" + chars[0]
-    for i in range(1, len(chars) - 1):
-        if chars[i] in sym:
-            continue
-        if chars[i - 1] == " ":
-            chars[i] = "_" + chars[i]
-        if chars[i + 1] == " ":
-            chars[i] = chars[i] + "_"
-    if chars[-1] not in sym:
-        chars[-1] = chars[-1] + "_"
+    # sym = ".,:@- !?;[]()+=&%$#/\"'"
+    # if chars[0] not in sym:
+    #     chars[0] = "_" + chars[0]
+    # for i in range(1, len(chars) - 1):
+    #     if chars[i] in sym:
+    #         continue
+    #     if chars[i - 1] == " ":
+    #         chars[i] = "_" + chars[i]
+    #     if chars[i + 1] == " ":
+    #         chars[i] = chars[i] + "_"
+    # if chars[-1] not in sym:
+    #     chars[-1] = chars[-1] + "_"
 
     return chars
 
