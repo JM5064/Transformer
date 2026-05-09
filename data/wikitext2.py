@@ -23,15 +23,14 @@ class WikiText2(Dataset):
         
     def create_data(self, min_length, num_merges):
         # convert to array of paragraphs
-        temp_arr = self.df.loc[:,"text"].to_list()
+        text = self.df.loc[:,"text"].to_list()
         
         # remove empty/very short paragraphs
-        self.arr = [t.strip("\n") for t in temp_arr if len(t) > min_length and t != ""]
+        self.array_text = [t.strip("\n") for t in text if len(t) > min_length and t != ""]
 
-        self.tokenized_text, self.vocab = bpe.bpe(self.arr, num_merges)
+        self.tokenized_text, self.vocab = bpe.bpe(self.array_text, num_merges)
+        self.encoding, self.decoding = bpe.make_mapping(self.vocab)
         
-        print(self.tokenized_text[:1000])
-        print(self.vocab)
         bpe.save_vocab(self.vocab, self.vocab_csv)
 
 

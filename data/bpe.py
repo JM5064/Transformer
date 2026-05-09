@@ -1,4 +1,4 @@
-import re, collections
+import collections
 from special_chars import UNK, EOS
 import time
 
@@ -103,6 +103,20 @@ def save_vocab(vocab, vocab_file):
         file.write('token,count\n')
         for key, value in vocab.items():
             file.write(f'{key},{value}\n')
+
+
+def make_mapping(vocab):
+    # token to number
+    encoding = {
+        token: i for i, token in enumerate(vocab)
+    }
+
+    # number to token
+    decoding = {
+        i : token for i, token in enumerate(vocab)
+    }
+
+    return encoding, decoding
 
 
 def bpe(text, num_merges):
