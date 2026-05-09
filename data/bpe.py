@@ -1,5 +1,6 @@
 import collections
 from special_chars import UNK, EOS
+import json
 import time
 
 
@@ -96,13 +97,6 @@ def get_vocab(chars: list[str]) -> dict[str, int]:
     vocab = collections.Counter(chars)
 
     return vocab
-
-
-def save_vocab(vocab, vocab_file):
-    with open(vocab_file, 'a') as file:
-        file.write('token,count\n')
-        for key, value in vocab.items():
-            file.write(f'{key},{value}\n')
 
 
 def make_mapping(vocab):
