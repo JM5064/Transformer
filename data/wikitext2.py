@@ -30,7 +30,7 @@ class WikiText2(Dataset):
 
         self.tokenized_text, self.vocab = bpe.bpe(self.arr, num_merges)
         
-        # print(self.tokenized_text)
+        print(self.tokenized_text[:1000])
         print(self.vocab)
         bpe.save_vocab(self.vocab, self.vocab_csv)
 

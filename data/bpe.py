@@ -1,4 +1,5 @@
 import re, collections
+from special_chars import UNK, EOS
 import time
 
 
@@ -68,7 +69,10 @@ def split_chars(text_arr: list[str]) -> list[str]:
                 chars.append(c)
             else:
                 # Unknown character
-                chars.append('<unk>')
+                chars.append(UNK)
+
+        # Append end of text character after each sample
+        chars.append(EOS)
         # chars.extend(list(t))
 
     # add BOW, EOW markers
