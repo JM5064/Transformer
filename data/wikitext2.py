@@ -8,7 +8,7 @@ import bpe
 
 class WikiText2(Dataset):
 
-    def __init__(self, split='train', vocab_csv='data/wikitext2/vocab.csv', encoded_text_csv='data/wikitext2/encoded_text.csv'):
+    def __init__(self, split='train', vocab_csv='data/wikitext2/vocab.json', encoded_text_csv='data/wikitext2/encoded_text.json'):
         super().__init__()
 
         if split == 'train':
@@ -21,7 +21,7 @@ class WikiText2(Dataset):
         self.vocab_csv = vocab_csv
         self.encoded_text_csv = encoded_text_csv
 
-        self.create_data(min_length=50, num_merges=5)
+        self.create_data(min_length=50, num_merges=1000)
         
     def create_data(self, min_length, num_merges):
         # convert to array of paragraphs
@@ -76,11 +76,5 @@ class WikiText2(Dataset):
         return encoded_text
 
 
-
-
-
 if __name__ == "__main__":
     dataset = WikiText2()
-
-
-
