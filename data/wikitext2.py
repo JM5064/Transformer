@@ -8,7 +8,9 @@ import bpe
 
 class WikiText2(Dataset):
 
-    def __init__(self, split='train', vocab_csv='data/wikitext2/vocab.json', encoded_text_csv='data/wikitext2/encoded_text.json'):
+    def __init__(self, split='train', seq_len=128, 
+                 vocab_csv='data/wikitext2/vocab.json', encoded_text_csv='data/wikitext2/encoded_text.json'         
+        ):
         super().__init__()
 
         if split == 'train':
@@ -18,10 +20,27 @@ class WikiText2(Dataset):
         else:
             self.df = pd.read_parquet('data/wikitext2/test-00000-of-00001.parquet')
 
+        self.seq_len = seq_len
         self.vocab_csv = vocab_csv
         self.encoded_text_csv = encoded_text_csv
 
-        self.create_data(min_length=50, num_merges=1000)
+        self.create_data(min_length=50, num_merges=5)
+
+
+    def __getitem__(self, index):
+        # if files dont exist, create them
+        # otherwise, load them
+        # encode text
+
+        input_tokens = self.encoded_text[index : index + self.seq_len]
+        target_tokens = self.encoded_text[index + 1 : index + self.seq_len + 1]
+
+        return input_tokens, target_tokens
+    
+
+    def __len__(self):
+        return len(self.encoded_text) - self.seq_len
+    
         
     def create_data(self, min_length, num_merges):
         # convert to array of paragraphs

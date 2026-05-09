@@ -120,13 +120,16 @@ def bpe(text, num_merges):
     vocab = get_vocab(chars)
     pairs = get_pairs(chars)
 
+    best_pairs = []
+
     for i in range(num_merges):
         s = time.time()
 
         best_pair = max(pairs, key=pairs.get)
+        best_pairs.append(best_pair)
 
         chars = merge_pair(best_pair, chars, vocab, pairs)
         
         print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
 
-    return chars, vocab
+    return chars, vocab, best_pair
