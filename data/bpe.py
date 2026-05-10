@@ -120,16 +120,38 @@ def bpe(text, num_merges):
     vocab = get_vocab(chars)
     pairs = get_pairs(chars)
 
-    best_pairs = []
+    merge_pairs = []
 
     for i in range(num_merges):
         s = time.time()
 
         best_pair = max(pairs, key=pairs.get)
-        best_pairs.append(best_pair)
+        merge_pairs.append(best_pair)
 
         chars = merge_pair(best_pair, chars, vocab, pairs)
         
         print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
 
-    return chars, vocab, best_pair
+    return chars, vocab, merge_pairs
+
+
+def apply_merge_pairs(text, merge_pairs):
+    """Returns tokenized text given a list of merge pairs"""
+
+    s = time.time()
+    chars = split_chars(text)
+    print("Splitting chars took", (time.time() - s) * 1000, "ms")
+    vocab = get_vocab(chars)
+    pairs = get_pairs(chars)
+
+    for i, pair in enumerate(merge_pairs):
+        s = time.time()
+
+        # Convert to tuple
+        pair = (pair[0], pair[1])
+        chars = merge_pair(pair, chars, vocab, pairs)
+        
+        print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
+
+    return chars
+

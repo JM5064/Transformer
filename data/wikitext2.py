@@ -1,7 +1,7 @@
-import collections
-import numpy as np
 import pandas as pd
 import json
+import os
+from special_chars import UNK
 from torch.utils.data import Dataset
 
 import bpe
@@ -9,7 +9,9 @@ import bpe
 class WikiText2(Dataset):
 
     def __init__(self, split='train', seq_len=128, 
-                 vocab_csv='data/wikitext2/vocab.json', encoded_text_csv='data/wikitext2/encoded_text.json'         
+            encoded_text_json='data/wikitext2/encoded_text.json',
+            vocab_json='data/wikitext2/vocab.json', 
+            merge_pairs_json='data/wikitext2/merge_pairs.json'
         ):
         super().__init__()
 
@@ -20,9 +22,12 @@ class WikiText2(Dataset):
         else:
             self.df = pd.read_parquet('data/wikitext2/test-00000-of-00001.parquet')
 
+        self.split = split
         self.seq_len = seq_len
-        self.vocab_csv = vocab_csv
-        self.encoded_text_csv = encoded_text_csv
+
+        self.vocab_json = vocab_json
+        self.encoded_text_json = encoded_text_json
+        self.merge_pairs_json = merge_pairs_json
 
         self.create_data(min_length=50, num_merges=5)
 
@@ -43,24 +48,47 @@ class WikiText2(Dataset):
     
         
     def create_data(self, min_length, num_merges):
+        # If encoded text file exists, load it. Otherwise, run BPE
+        if self.file_exists(self.encoded_text_json):
+            return self.load_encoded_text(self.encoded_text_json)
+
         # convert to array of paragraphs
         text = self.df.loc[:,"text"].to_list()
         
         # remove empty/very short paragraphs
         self.array_text = [t.strip("\n") for t in text if len(t) > min_length and t != ""]
 
-        # Run bpe
-        tokenized_text, self.vocab = bpe.bpe(self.array_text, num_merges)
+        if self.split == 'train':
+            # Run bpe
+            tokenized_text, self.vocab, merge_pairs = bpe.bpe(self.array_text, num_merges)
 
-        # Create encoding and decoding maps
-        self.encoding, self.decoding = bpe.make_mapping(self.vocab)
+            # Create encoding and decoding maps
+            self.encoding, self.decoding = bpe.make_mapping(self.vocab)
 
-        # Encode text
-        self.encoded_text = self.encode_text(tokenized_text)
-        
-        # Save vocab and encoded text
-        self.save_vocab(self.vocab, self.vocab_csv)
-        self.save_encoded_text(self.encoded_text, self.encoded_text_csv)
+            # Encode text
+            self.encoded_text = self.encode_text(tokenized_text)
+            
+            # Save vocab, encoded text, and merge pairs
+            self.save_vocab(self.vocab, self.vocab_json)
+            self.save_encoded_text(self.encoded_text, self.encoded_text_json)
+            self.save_merge_pairs(merge_pairs, self.merge_pairs_json)
+        else:
+            # Load merge pair file and vocabulary
+            # NOTE: these files need to be created by running the split as 'train' first
+            merge_pairs = self.load_merge_pairs(self.merge_pairs_json)
+            self.vocab = self.load_vocab(self.vocab_json)
+
+            # Run merges
+            tokenized_text = bpe.apply_merge_pairs(self.array_text, merge_pairs)
+
+            # Create encoding and decoding maps
+            self.encoding, self.decoding = bpe.make_mapping(self.vocab)
+
+            # Encode text
+            self.encoded_text = self.encode_text(tokenized_text)
+            self.save_encoded_text(self.encoded_text, self.encoded_text_json)
+
+        return self.encoded_text
 
     
     def save_vocab(self, vocab, vocab_file):
@@ -78,7 +106,10 @@ class WikiText2(Dataset):
     def encode_text(self, tokenized_text):
         encoded_text = []
         for token in tokenized_text:
-            encoded_text.append(self.encoding[token])
+            if token in self.encoding:
+                encoded_text.append(self.encoding[token])
+            else:
+                encoded_text.append(UNK)
 
         return encoded_text
     
@@ -93,7 +124,25 @@ class WikiText2(Dataset):
             encoded_text = json.load(file)
 
         return encoded_text
+    
+
+    def save_merge_pairs(self, merge_pairs, merge_pairs_file):
+        with open(merge_pairs_file, "w", encoding="utf-8") as file:
+            json.dump(merge_pairs, file, ensure_ascii=False)
+
+
+    def load_merge_pairs(self, merge_pairs_file):
+        with open(merge_pairs_file, "r", encoding="utf-8") as file:
+            merge_pairs = json.load(file)
+
+        return merge_pairs
+    
+
+    def file_exists(self, file_path):
+        return os.path.exists(file_path) and os.path.getsize(file_path) > 0
 
 
 if __name__ == "__main__":
-    dataset = WikiText2()
+    train_set = WikiText2(split='train', encoded_text_json='data/wikitext2/encoded_text_train.json')
+    val_set = WikiText2(split='val', encoded_text_json='data/wikitext2/encoded_text_val.json')
+    test_set = WikiText2(split='test', encoded_text_json='data/wikitext2/encoded_text_test.json')
