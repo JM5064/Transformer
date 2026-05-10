@@ -5,6 +5,16 @@ import time
 
 
 def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
+    """Outputs a frequency map of token pairs
+    Args:
+        chars (list[str]) : the current tokenized text list 
+            eg. ['the', 'qu', 'ick', ...]
+    
+    Returns:
+        pairs (dict[tuple[str, str], int]) : a frequency list of all pairs in chars
+            eg. { ('the', 'qu') : 4, ... }
+    """
+
     pairs = collections.defaultdict(int)
 
     for i in range(len(chars) - 1):
@@ -14,6 +24,17 @@ def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
 
 
 def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], pairs: dict[tuple[str, str], int]) -> list[str]:
+    """Merge pair in chars while updating vocab and pairs dict
+        Args:
+            pair (tuple[str, str]) : the pair to merge
+            chars (list[str]) : the current tokenized text list 
+            vocab (dict[str, int]) : the current vocabulary
+            pairs (dict[tuple[str, str], int]) : the current frequency map of token pairs
+
+        Returns:
+            new_chars (list[str]) : an updated tokenized text list
+    """
+
     merged = "".join(pair)
     new_chars = []
 
@@ -28,6 +49,7 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
             vocab[chars[i+1]] -= 1
             vocab[merged] += 1
 
+            # Remove tokens no longer in vocabulary
             if vocab[chars[i]] == 0:
                 del vocab[chars[i]]
             if vocab[chars[i+1]] == 0:
@@ -74,7 +96,6 @@ def split_chars(text_arr: list[str]) -> list[str]:
 
         # Append end of text character after each sample
         chars.append(EOS)
-        # chars.extend(list(t))
 
     # add BOW, EOW markers
     # sym = ".,:@- !?;[]()+=&%$#/\"'"
@@ -113,18 +134,32 @@ def make_mapping(vocab):
     return encoding, decoding
 
 
+def save_to_file(data, file_path, indent=None):
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=indent)
+
+
+def load_from_file(file_path):
+    with open(file_path, "r", encoding="utf-8") as file:
+        data = json.load(file)
+
+    return data
+
+
 def bpe(text, num_merges):
-    s = time.time()
+    print("Performing BPE")
+
     chars = split_chars(text)
-    print("Splitting chars took", (time.time() - s) * 1000, "ms")
     vocab = get_vocab(chars)
     pairs = get_pairs(chars)
 
     merge_pairs = []
 
+    # Perform merges
     for i in range(num_merges):
         s = time.time()
 
+        # Find most common pair and merge
         best_pair = max(pairs, key=pairs.get)
         merge_pairs.append(best_pair)
 
@@ -138,16 +173,16 @@ def bpe(text, num_merges):
 def apply_merge_pairs(text, merge_pairs):
     """Returns tokenized text given a list of merge pairs"""
 
-    s = time.time()
+    print("Applying merge pairs")
+
     chars = split_chars(text)
-    print("Splitting chars took", (time.time() - s) * 1000, "ms")
     vocab = get_vocab(chars)
     pairs = get_pairs(chars)
 
     for i, pair in enumerate(merge_pairs):
         s = time.time()
 
-        # Convert to tuple
+        # Convert pair from array to tuple and merge
         pair = (pair[0], pair[1])
         chars = merge_pair(pair, chars, vocab, pairs)
         
