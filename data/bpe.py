@@ -44,7 +44,10 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
     i = 0
     while i < len(chars):
         if i+1 < len(chars) and (chars[i], chars[i+1]) == pair:
+
             new_chars.append(merged)
+            
+            # update counts for vocabulary
             vocab[chars[i]] -= 1
             vocab[chars[i+1]] -= 1
             vocab[merged] += 1
@@ -55,7 +58,8 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
             if vocab[chars[i+1]] == 0:
                 del vocab[chars[i+1]]
 
-            # Update previous and next pairs with merged pair
+            # Update counts for previous and next pairs with merged pair
+            # e.g. (a, b) (b, c) (c, d) -> (a, bc) (bc, d)
             if i-1 >= 0:
                 prev_pair = (chars[i-1], chars[i])
                 new_pair = (chars[i-1], merged)
@@ -84,6 +88,14 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
 
 
 def split_chars(text_arr: list[str]) -> list[str]:
+    """Filter and split sentences into individual characters
+
+    Args:
+        text_arr (list[str]): list of sentences to split
+
+    Returns:
+        list[str]: list of characters, pluse <EOS> and <UNK> symbols
+    """
     chars = []
     for t in text_arr:
         # Filter for unicode characters up to greek and coptic
@@ -115,12 +127,29 @@ def split_chars(text_arr: list[str]) -> list[str]:
 
 
 def get_vocab(chars: list[str]) -> dict[str, int]:
+    """Make vocabulary from tokenized text
+
+    Args:
+        chars (list[str]): list of tokens
+
+    Returns:
+        dict[str, int]: dictionary with count of each unique token
+    """
     vocab = collections.Counter(chars)
 
     return vocab
 
 
 def make_mapping(vocab):
+    """Make token-integer mapping as two dictionaries
+
+    Args:
+        vocab (dict[str, int]): dictionary with count of each unique token
+
+    Returns:
+        dict[str, int]: token to integer mapping
+        dict[int, str]: integer to token mapping
+    """
     # token to number
     encoding = {
         token: i for i, token in enumerate(vocab)
@@ -135,11 +164,26 @@ def make_mapping(vocab):
 
 
 def save_to_file(data, file_path, indent=None):
+    """Save data to json file
+
+    Args:
+        data (dict): object to save
+        file_path (str): file name to save data to
+        indent (int|str, optional): indent character/size for file, default None
+    """
     with open(file_path, "w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=indent)
 
 
 def load_from_file(file_path):
+    """Load json data from file
+
+    Args:
+        file_path (str): file to read from
+
+    Returns:
+        dict: file contents as a dictionary
+    """
     with open(file_path, "r", encoding="utf-8") as file:
         data = json.load(file)
 
@@ -147,6 +191,17 @@ def load_from_file(file_path):
 
 
 def bpe(text, num_merges):
+    """Run byte pair encoding (BPE) algorithm on text
+
+    Args:
+        text (list[str]): list of sentences to tokenize
+        num_merges (int): number of merges to perform
+
+    Returns:
+        list[str]: tokenized text, as list of tokens in order
+        dict[str, int]: unique tokens and their frequency
+        list[tuple[str, str]]: list of token pairs that were merged by the algorithm
+    """
     print("Performing BPE")
 
     chars = split_chars(text)
@@ -171,7 +226,15 @@ def bpe(text, num_merges):
 
 
 def apply_merge_pairs(text, merge_pairs):
-    """Returns tokenized text given a list of merge pairs"""
+    """Returns tokenized text given a list of merge pairs
+
+    Args:
+        text (list[str]): list of sentences to tokenize
+        merge_pairs (list[tuple[str, str]]): list of token pairs to merge into tokens
+
+    Returns:
+        list[str]: tokenized text, as list of tokens in order
+    """
 
     print("Applying merge pairs")
 
@@ -189,4 +252,3 @@ def apply_merge_pairs(text, merge_pairs):
         print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
 
     return chars
-
