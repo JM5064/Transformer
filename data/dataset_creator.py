@@ -23,7 +23,7 @@ class DatasetCreator:
         # Load parquet file
         self.df = pd.read_parquet(parquet_file)
 
-        self.create_data(min_length=50, num_merges=5)
+        self.create_data(min_length=50, num_merges=10000)
 
 
     def create_data(self, min_length: int, num_merges: int):

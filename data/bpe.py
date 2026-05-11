@@ -39,7 +39,8 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
     new_chars = []
 
     # Remove pair from pairs
-    del pairs[pair]
+    if pair in pairs:
+        del pairs[pair]
 
     i = 0
     while i < len(chars):
