@@ -4,7 +4,7 @@ import json
 import time
 
 
-def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
+def get_pairs(chars):
     """Outputs a frequency map of token pairs
     Args:
         chars (list[str]) : the current tokenized text list 
@@ -23,7 +23,7 @@ def get_pairs(chars: list[str]) -> dict[tuple[str, str], int]:
     return pairs
 
 
-def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], pairs: dict[tuple[str, str], int]) -> list[str]:
+def merge_pair(pair, chars, vocab, pairs):
     """Merge pair in chars while updating vocab and pairs dict
         Args:
             pair (tuple[str, str]) : the pair to merge
@@ -88,7 +88,7 @@ def merge_pair(pair: tuple[str, str], chars: list[str], vocab: dict[str, int], p
     return new_chars
 
 
-def split_chars(text_arr: list[str]) -> list[str]:
+def split_chars(text_arr):
     """Filter and split sentences into individual characters
 
     Args:
@@ -127,7 +127,7 @@ def split_chars(text_arr: list[str]) -> list[str]:
     return chars
 
 
-def get_vocab(chars: list[str]) -> dict[str, int]:
+def get_vocab(chars):
     """Make vocabulary from tokenized text
 
     Args:

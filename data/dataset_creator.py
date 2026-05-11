@@ -26,7 +26,7 @@ class DatasetCreator:
         self.create_data(min_length=50, num_merges=10000)
 
 
-    def create_data(self, min_length: int, num_merges: int):
+    def create_data(self, min_length, num_merges):
         """Runs BPE to create vocab, merge pairs, and encoded text
         Args:
             min_length (int) : threshold for removing empty/short paragraphs
@@ -78,7 +78,7 @@ class DatasetCreator:
             bpe.save_to_file(self.encoded_text, self.encoded_text_json)
 
 
-    def encode_text(self, tokenized_text: list[str]) -> list[int]:
+    def encode_text(self, tokenized_text):
         """Encodes tokenized text
         Args:
             tokenized_text (list[str]) : the dataset text as a list of string tokens
@@ -101,8 +101,15 @@ class DatasetCreator:
         return encoded_text
 
 
-    def file_exists(self, file_path: str) -> bool:
-        """Evaluates whether the given file exists"""
+    def file_exists(self, file_path):
+        """Evaluates whether the given file exists
+        
+        Args:
+            file_path (str): path to check
+        
+        Returns:
+            bool
+        """
 
         return os.path.exists(file_path) and os.path.getsize(file_path) > 0
     

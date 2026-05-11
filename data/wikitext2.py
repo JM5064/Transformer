@@ -8,6 +8,16 @@ class WikiText2(Dataset):
             encoded_text_json='data/wikitext2/encoded_text.json',
             vocab_json='data/wikitext2/vocab.json', 
         ):
+        """Make dataset from encoded text and vocabulary
+
+        Args:
+            seq_len (int, optional): length of "context window" for training. 
+                Defaults to 128.
+            encoded_text_json (str, optional): file path of encoded text. 
+                Defaults to 'data/wikitext2/encoded_text.json'.
+            vocab_json (str, optional): file path of vocabulary. 
+                Defaults to 'data/wikitext2/vocab.json'.
+        """
 
         super().__init__()
 
@@ -19,9 +29,17 @@ class WikiText2(Dataset):
 
 
     def __getitem__(self, index):
-        """Retrives a training + target sample given an index
-            The training sample is a piece of text start at index 'index' of length seq_len
-            The target is the same piece of text, shifted right by 1
+        """Retrives a training + target sample
+            
+        The training sample is a piece of text start at index `index` of length `seq_len`
+        The target is the same piece of text, shifted right by 1
+
+        Args:
+            index (int): index of sample to get
+
+        Returns:
+            input_tokens (list[int]): tokenized training sample
+            target_tokens (list[int]): tokenized target of the training sample
         """
 
         input_tokens = self.encoded_text[index : index + self.seq_len]
