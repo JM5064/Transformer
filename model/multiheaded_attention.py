@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class MultiheadedAttention(nn.Module):
 
-    def __init__(self, d_k=64, d_v=64, d_model=512, num_heads=8, mask=False):
+    def __init__(self, d_k=64, d_v=64, d_model=512, num_heads=8, seq_len=128, mask=False):
         super().__init__()
 
         self.d_k = d_k
@@ -17,7 +17,8 @@ class MultiheadedAttention(nn.Module):
         self.W_V = nn.Parameter(torch.zeros(d_v * num_heads, d_model))      # value down
         # (d_k x num_heads x d_model) x 4 params
 
-        # TODO: layer norm
+        self.layer_norm = nn.LayerNorm((d_model, seq_len))
+        # (d_model x seq_len) x 2 params
 
         self.initialize_weights()
 
@@ -45,6 +46,8 @@ class MultiheadedAttention(nn.Module):
         attention = self.W_output @ (after_softmax @ V)
 
         X = attention + X_resid
+
+        X = self.layer_norm(X)
 
         return X
     
