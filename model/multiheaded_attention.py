@@ -4,21 +4,27 @@ import torch.nn as nn
 
 class MultiheadedAttention(nn.Module):
 
-    def __init__(self, d_k=64, d_v=64, d_model=512, num_heads=8, seq_len=128, mask=False):
+    def __init__(self, d_k=64, d_v=64, d_model=512, num_heads=8, seq_len=128, use_mask=False):
         super().__init__()
 
         self.d_k = d_k
-        self.mask = mask
+        self.use_mask = use_mask
+        
+        self.W_Q = nn.Parameter(torch.zeros(d_model, d_k * num_heads))
+        self.W_K = nn.Parameter(torch.zeros(d_model, d_k * num_heads))
 
-        self.W_Q = nn.Parameter(torch.zeros((d_k * num_heads), d_model))
-        self.W_K = nn.Parameter(torch.zeros((d_k * num_heads), d_model))
-
-        self.W_output = nn.Parameter(torch.zeros(d_model, d_v * num_heads)) # value up
-        self.W_V = nn.Parameter(torch.zeros(d_v * num_heads, d_model))      # value down
+        self.W_output = nn.Parameter(torch.zeros(d_v * num_heads, d_model)) # value up
+        self.W_V = nn.Parameter(torch.zeros(d_model, d_v * num_heads))      # value down
         # (d_k x num_heads x d_model) x 4 params
 
-        self.layer_norm = nn.LayerNorm((d_model, seq_len))
+        self.layer_norm = nn.LayerNorm((seq_len, d_model))
         # (d_model x seq_len) x 2 params
+
+        if self.use_mask:
+            self.mask = torch.zeros((seq_len, seq_len))
+            for i in range(seq_len):
+                for j in range(i):
+                    self.mask[i, j] = -torch.inf
 
         self.initialize_weights()
 
@@ -31,20 +37,29 @@ class MultiheadedAttention(nn.Module):
 
     
     def forward(self, X):
-        # Input: embedding length (d_model) * seq_len
+        """X : input of size (batch, seq_len, d_model)"""
+
         X_resid = X
 
         # Compute query, key, and value matrices
-        Q = self.W_Q @ X
-        K = self.W_K @ X
-        V = self.W_V @ X
+        Q = X @ self.W_Q
+        K = X @ self.W_K
+        V = X @ self.W_V
+
+        # Tranpose keys (not including batch dim)
+        K_T = torch.transpose(K, -2, -1)
 
         # Compute attention
-        before_softmax = (Q @ K.T) / torch.sqrt(self.d_k)
-        after_softmax = torch.softmax(before_softmax, dim=0)
+        before_softmax = (Q @ K_T) / (self.d_k ** 0.5)
 
-        attention = self.W_output @ (after_softmax @ V)
+        if self.use_mask:
+            before_softmax = before_softmax + self.mask
+        
+        after_softmax = torch.softmax(before_softmax, dim=-1)
 
+        attention = (after_softmax @ V) @ self.W_output
+
+        # Add residual connection, and layer norm
         X = attention + X_resid
 
         X = self.layer_norm(X)
@@ -53,7 +68,9 @@ class MultiheadedAttention(nn.Module):
     
 
 if __name__ == "__main__":
-    mha = MultiheadedAttention()
+    input_data = torch.randn((1, 4, 4))
 
-    total_params = sum(p.numel() for p in mha.parameters())
-    print(total_params)
+    mha = MultiheadedAttention(d_k=1, d_v=1, d_model=4, seq_len=4, use_mask=True)
+
+    mha(input_data)
+    
