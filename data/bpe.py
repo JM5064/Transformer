@@ -1,5 +1,5 @@
 import collections
-from special_chars import UNK, EOS
+from data.special_chars import UNK, EOS
 import json
 import time
 

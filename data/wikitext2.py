@@ -1,11 +1,12 @@
-import bpe
+from data.bpe import load_from_file
+import torch
 from torch.utils.data import Dataset
 
 
 class WikiText2(Dataset):
 
     def __init__(self, seq_len=128, 
-            encoded_text_json='data/wikitext2/encoded_text.json',
+            encoded_text_json='data/wikitext2/encoded_text_train.json',
             vocab_json='data/wikitext2/vocab.json', 
         ):
         """Make dataset from encoded text and vocabulary
@@ -24,8 +25,8 @@ class WikiText2(Dataset):
         self.seq_len = seq_len
 
         # Load data files
-        self.encoded_text = bpe.load_from_file(encoded_text_json)
-        self.vocab = bpe.load_from_file(vocab_json)
+        self.encoded_text = load_from_file(encoded_text_json)
+        self.vocab = load_from_file(vocab_json)
 
 
     def __getitem__(self, index):
@@ -45,7 +46,7 @@ class WikiText2(Dataset):
         input_tokens = self.encoded_text[index : index + self.seq_len]
         target_tokens = self.encoded_text[index + 1 : index + self.seq_len + 1]
 
-        return input_tokens, target_tokens
+        return torch.tensor(input_tokens), torch.tensor(target_tokens)
     
 
     def __len__(self):

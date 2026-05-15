@@ -36,13 +36,13 @@ class MultiheadedAttention(nn.Module):
         nn.init.xavier_uniform_(self.W_V)
 
     
-    def forward(self, X):
+    def forward(self, X, Y):
         """X : input of size (batch, seq_len, d_model)"""
 
-        X_resid = X
+        X_resid = Y
 
         # Compute query, key, and value matrices
-        Q = X @ self.W_Q
+        Q = Y @ self.W_Q
         K = X @ self.W_K
         V = X @ self.W_V
 
@@ -68,9 +68,10 @@ class MultiheadedAttention(nn.Module):
     
 
 if __name__ == "__main__":
-    input_data = torch.randn((1, 4, 4))
+    input_data1 = torch.randn((1, 4, 4))
+    input_data2 = torch.randn((1, 4, 4))
 
     mha = MultiheadedAttention(d_k=1, d_v=1, d_model=4, seq_len=4, use_mask=True)
 
-    mha(input_data)
+    mha(input_data1, input_data2)
     
