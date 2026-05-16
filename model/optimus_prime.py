@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 from model.positional_encoding import PositionalEncoding
 from model.encoder_block import EncoderBlock
@@ -10,10 +11,10 @@ class OptimusPrime(nn.Module):
     def __init__(self, vocab_size, d_model=512):
         super().__init__()
 
-        self.positional_encoding = PositionalEncoding()
+        self.d_model = d_model
 
-        self.input_embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
-        self.output_embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
+        self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
+        self.positional_encoding = PositionalEncoding()
 
         self.encoder = nn.ModuleList()
         for _ in range(6):
@@ -24,24 +25,29 @@ class OptimusPrime(nn.Module):
             self.decoder.append(DecoderBlock())
 
         self.unembedding = nn.Linear(in_features=d_model, out_features=vocab_size)
+        self.unembedding.weight = self.embedding.weight
 
 
     def forward(self, X, Y):
-        X = self.input_embedding(X)
+        # Embed input and output sequences
+        X = self.embedding(X) * (self.d_model ** 0.5)
         X = self.positional_encoding(X)
 
-        Y = self.output_embedding(Y)
+        Y = self.embedding(Y) * (self.d_model ** 0.5)
         Y = self.positional_encoding(Y)
 
         for layer in self.encoder:
             X = layer(X)
 
         for layer in self.decoder:
-            Z = layer(X, Y)
+            Y = layer(X, Y)
 
-        Z = self.unembedding(Z)
+        Y = self.unembedding(Y)
 
-        return Z
+        # Apply softmax
+        Y = torch.softmax(Y, dim=-1)
+
+        return Y
 
 
 if __name__ == "__main__":
@@ -51,8 +57,10 @@ if __name__ == "__main__":
 
     wikitext2 = WikiText2()
 
-    dl = DataLoader(wikitext2, batch_size=4)
-    op = OptimusPrime(vocab_size=10217)
+    dl = DataLoader(wikitext2, batch_size=1)
+    op = OptimusPrime(vocab_size=wikitext2.get_vocab_size())
+
+    print("Num params:", sum(p.numel() for p in op.parameters()))
 
     for X, Y in dl:
         s = time.time()
