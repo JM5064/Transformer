@@ -53,6 +53,10 @@ class WikiText2(Dataset):
         return len(self.encoded_text) - self.seq_len
     
 
+    def get_vocab_size(self):
+        return len(self.vocab)
+    
+
 if __name__ == "__main__":
     train_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
     val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
