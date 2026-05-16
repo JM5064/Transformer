@@ -21,10 +21,12 @@ class MultiheadedAttention(nn.Module):
         # (d_model x seq_len) x 2 params
 
         if self.use_mask:
-            self.mask = torch.zeros((seq_len, seq_len))
+            mask = torch.zeros((seq_len, seq_len))
             for i in range(seq_len):
                 for j in range(i):
-                    self.mask[i, j] = -torch.inf
+                    mask[i, j] = -torch.inf
+            
+            self.mask = nn.Buffer(mask)
 
         self.initialize_weights()
 
