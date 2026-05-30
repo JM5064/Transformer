@@ -1,4 +1,9 @@
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
+
+from model.optimus_prime import OptimusPrime
+from model.loss import CrossEntropyLoss
 from data.wikitext2 import WikiText2
 
 
@@ -16,6 +21,12 @@ if __name__ == "__main__":
     train_loader = DataLoader(wikitext2_train, batch_size=BATCH_SIZE, shuffle=True, num_workers=1)
     val_loader = DataLoader(wikitext2_val, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
     test_loader = DataLoader(wikitext2_test, batch_size=BATCH_SIZE, shuffle=False, num_workers=1)
+
+
+    model = OptimusPrime(vocab_size=VOCAB_SIZE)
+    
+    loss_func = CrossEntropyLoss(vocab_size=VOCAB_SIZE)
+    optimizer = optim.Adam(model.parameters, lr=1, betas=(0.9, 0.98), eps=1e-9, weight_decay=0)
 
     
 
