@@ -17,9 +17,9 @@ def validate(model, val_loader, loss_func):
             X = X.to(DEVICE)
             Y = Y.to(DEVICE)
 
-            # Get predictions for regression and heatmap paths
-            preds = model(X)
-            loss = loss_func(Y, preds)
+            # Get predictions
+            preds = model(X, Y)
+            loss = loss_func(preds, Y)
             total_loss += loss.item()
 
 
@@ -66,9 +66,9 @@ def train(
             optimizer.zero_grad()
 
             # Get predictions
-            preds = model(X)
+            preds = model(X, Y)
 
-            loss = loss_func(Y, preds)
+            loss = loss_func(preds, Y)
             loss.backward()
             optimizer.step()
 
