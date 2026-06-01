@@ -45,7 +45,8 @@ class OptimusPrime(nn.Module):
         Y = self.unembedding(Y)
 
         # Apply softmax
-        Y = torch.softmax(Y, dim=-1)
+        # Y = torch.softmax(Y, dim=-2)
+        # print(Y.shape)
 
         return Y
 

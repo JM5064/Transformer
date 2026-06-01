@@ -34,13 +34,12 @@ def validate(model, val_loader, loss_func):
 
 def train(
         model,
-        num_epochs,
         train_loader,
         val_loader,
         test_loader,
         loss_func,
         optimizer,
-        scheduler,
+        lr_updater,
         start_epoch=0,
         runs_dir="runs",
     ):
@@ -53,60 +52,57 @@ def train(
     best_loss = float('inf')
 
     # training loop
-    for epoch in range(start_epoch, num_epochs):
-        print(f'Epoch {epoch+1}/{num_epochs}')
+    total_loss = 0.0
 
-        total_loss = 0.0
+    model.train()
+    for step_num, (X, Y) in enumerate(tqdm(train_loader), start=1):
+        X = X.to(DEVICE)
+        Y = Y.to(DEVICE)
 
-        model.train()
-        for X, Y in tqdm(train_loader):
-            X = X.to(DEVICE)
-            Y = Y.to(DEVICE)
+        optimizer.zero_grad()
 
-            optimizer.zero_grad()
+        # Get predictions
+        preds = model(X, Y)
 
-            # Get predictions
-            preds = model(X, Y)
+        loss = loss_func(preds, Y)
+        loss.backward()
 
-            loss = loss_func(preds, Y)
-            loss.backward()
-            optimizer.step()
+        lr_updater(optimizer, step_num)
+        optimizer.step()
 
-            total_loss += loss.item()
+        total_loss += loss.item()
 
-        # print and log metrics
-        average_train_loss = total_loss / len(train_loader)
+        if step_num % 5 == 0:
+            print(f"\nEvaluating after step {step_num}")
+            # print and log metrics
+            average_train_loss = total_loss / step_num
 
-        metrics = validate(model, val_loader, loss_func)
-        metrics["average_train_loss"] = average_train_loss
+            metrics = validate(model, val_loader, loss_func)
+            metrics["average_train_loss"] = average_train_loss
 
-        print(f'Epoch {epoch+1} Results:')
+            print(f'Step {step_num+1} Results:')
 
-        print(f'Train Loss: {average_train_loss}')
-        print(f'Val Loss:   {metrics["average_val_loss"]}')
+            print(f'Train Loss: {average_train_loss}')
+            print(f'Val Loss:   {metrics["average_val_loss"]}')
 
-        log_results(log_directory + "/metrics.csv", metrics)
+            log_results(log_directory + "/metrics.csv", metrics)
 
-        # Step scheduler
-        if scheduler:
-            scheduler.step()
 
-        # save best model
-        checkpoint = {
-            'epoch': epoch + 1,
-            'state_dict': model.state_dict(),
-            'optimizer': optimizer.state_dict(),
-            'scheduler': scheduler.state_dict()
-        }
+            # save best model
+            checkpoint = {
+                'epoch': step_num + 1,
+                'state_dict': model.state_dict(),
+                'optimizer': optimizer.state_dict(),
+            }
 
-        # Save best model
-        val_loss = metrics['average_val_loss']
-        if val_loss < best_loss:
-            torch.save(checkpoint, log_directory + "/best.pt")
-            best_loss = val_loss
+            # Save best model
+            val_loss = metrics['average_val_loss']
+            if val_loss < best_loss:
+                torch.save(checkpoint, log_directory + "/best.pt")
+                best_loss = val_loss
 
-        # Save last model
-        torch.save(checkpoint, log_directory + "/last.pt")
+            # Save last model
+            torch.save(checkpoint, log_directory + "/last.pt")
 
 
     # test model and print/log testing metrics
