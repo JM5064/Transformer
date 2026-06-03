@@ -81,7 +81,7 @@ def train(
             metrics = validate(model, val_loader, loss_func)
             metrics["average_train_loss"] = average_train_loss
 
-            print(f'Step {step_num+1} Results:')
+            print(f'Step {step_num} Results:')
 
             print(f'Train Loss: {average_train_loss}')
             print(f'Val Loss:   {metrics["average_val_loss"]}')
