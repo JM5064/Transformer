@@ -44,10 +44,6 @@ class OptimusPrime(nn.Module):
 
         Y = self.unembedding(Y)
 
-        # Apply softmax
-        # Y = torch.softmax(Y, dim=-2)
-        # print(Y.shape)
-
         return Y
 
 
@@ -69,7 +65,4 @@ if __name__ == "__main__":
         print((time.time() - s) * 1000)
 
         break
-
-
-
 
