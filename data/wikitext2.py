@@ -8,6 +8,7 @@ class WikiText2(Dataset):
     def __init__(self, seq_len=128, 
             encoded_text_json='data/wikitext2/encoded_text_train.json',
             vocab_json='data/wikitext2/vocab.json', 
+            percent=1
         ):
         """Make dataset from encoded text and vocabulary
 
@@ -18,14 +19,18 @@ class WikiText2(Dataset):
                 Defaults to 'data/wikitext2/encoded_text.json'.
             vocab_json (str, optional): file path of vocabulary. 
                 Defaults to 'data/wikitext2/vocab.json'.
+            percent (float): percent of the dataset to take from
         """
 
         super().__init__()
 
         self.seq_len = seq_len
+        self.percent = percent
 
         # Load data files
         self.encoded_text = load_from_file(encoded_text_json)
+        self.encoded_text = self.encoded_text[:int(len(self.encoded_text) * percent)]
+
         self.vocab = load_from_file(vocab_json)
 
 
@@ -59,5 +64,7 @@ class WikiText2(Dataset):
 
 if __name__ == "__main__":
     train_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
-    val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
+    val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json', percent=0.1)
     test_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
+
+    print(len(val_set))
