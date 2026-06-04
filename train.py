@@ -10,7 +10,7 @@ from utils import DEVICE, log_results
 
 def validate(model, val_loader, loss_func):
     model.eval()
-    total_loss= 0.0
+    total_loss = 0.0
     
     with torch.no_grad():
         for X, Y in val_loader:
@@ -76,7 +76,8 @@ def train(
         if step_num % val_every == 0:
             print(f"\nEvaluating after step {step_num}")
             # print and log metrics
-            average_train_loss = total_loss / step_num
+            average_train_loss = total_loss / val_every
+            total_loss = 0.0
 
             metrics = validate(model, val_loader, loss_func)
             metrics["average_train_loss"] = average_train_loss
