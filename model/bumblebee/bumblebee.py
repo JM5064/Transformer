@@ -19,6 +19,7 @@ class Bumblebee(nn.Module):
         for _ in range(12): 
             self.decoder.append(DecoderBlock())
 
+        nn.init.normal_(self.embedding.weight, std=0.02)
         self.unembedding = nn.Linear(in_features=d_model, out_features=vocab_size)
         self.unembedding.weight = self.embedding.weight
 
