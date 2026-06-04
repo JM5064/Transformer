@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
 
-from model.optimus_prime import OptimusPrime
+from model.bumblebee.bumblebee import Bumblebee
 from train import train
 from model.loss import CrossEntropyLoss
 from data.wikitext2 import WikiText2
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
 
     d_model = 512
-    model = OptimusPrime(vocab_size=VOCAB_SIZE, d_model=d_model)
+    model = Bumblebee(vocab_size=VOCAB_SIZE, d_model=d_model)
     
     loss_func = CrossEntropyLoss(vocab_size=VOCAB_SIZE)
     optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9, weight_decay=0)

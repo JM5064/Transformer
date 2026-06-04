@@ -1,12 +1,10 @@
-import torch
 import torch.nn as nn
 from model.positional_encoding import PositionalEncoding
-from model.encoder_block import EncoderBlock
-from model.decoder_block import DecoderBlock
+from model.bumblebee.decoder_block import DecoderBlock
 import time
 
 
-class OptimusPrime(nn.Module):
+class Bumblebee(nn.Module):
 
     def __init__(self, vocab_size, d_model=512):
         super().__init__()
@@ -16,35 +14,25 @@ class OptimusPrime(nn.Module):
         self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
         self.positional_encoding = PositionalEncoding()
 
-        self.encoder = nn.ModuleList()
-        for _ in range(6):
-            self.encoder.append(EncoderBlock())
-
         self.decoder = nn.ModuleList()
-        for _ in range(6): 
+        for _ in range(12): 
             self.decoder.append(DecoderBlock())
 
         self.unembedding = nn.Linear(in_features=d_model, out_features=vocab_size)
         self.unembedding.weight = self.embedding.weight
 
 
-    def forward(self, X, Y):
+    def forward(self, X):
         # Embed input and output sequences
         X = self.embedding(X) * (self.d_model ** 0.5)
         X = self.positional_encoding(X)
 
-        Y = self.embedding(Y) * (self.d_model ** 0.5)
-        Y = self.positional_encoding(Y)
-
-        for layer in self.encoder:
+        for layer in self.decoder:
             X = layer(X)
 
-        for layer in self.decoder:
-            Y = layer(X, Y)
+        X = self.unembedding(X)
 
-        Y = self.unembedding(Y)
-
-        return Y
+        return X
 
 
 if __name__ == "__main__":
@@ -55,13 +43,13 @@ if __name__ == "__main__":
     wikitext2 = WikiText2()
 
     dl = DataLoader(wikitext2, batch_size=1)
-    op = OptimusPrime(vocab_size=wikitext2.get_vocab_size())
+    bb = Bumblebee(vocab_size=wikitext2.get_vocab_size())
 
-    print("Num params:", sum(p.numel() for p in op.parameters()))
+    print("Num params:", sum(p.numel() for p in bb.parameters()))
 
     for X, Y in dl:
         s = time.time()
-        op(X, Y)
+        bb(X)
         print((time.time() - s) * 1000)
 
         break
