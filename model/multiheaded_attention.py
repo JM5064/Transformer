@@ -20,6 +20,7 @@ class MultiheadedAttention(nn.Module):
         self.W_V = nn.Parameter(torch.zeros(d_model, d_v * num_heads))      # value down
         # (d_k x num_heads x d_model) x 4 params
 
+        self.dropout = nn.Dropout(p=0.1)
         self.layer_norm = nn.LayerNorm(d_model)
         # d_model x 2 params
 
@@ -75,6 +76,9 @@ class MultiheadedAttention(nn.Module):
         # Concatenate heads
         attention = attention.transpose(1, 2).reshape(-1, self.seq_len, self.d_k * self.num_heads)
         attention = attention @ self.W_output
+
+        # Apply dropout
+        attention = self.dropout(attention)
     
         # Add residual connection, and layer norm
         X = attention + X_resid

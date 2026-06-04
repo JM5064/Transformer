@@ -11,6 +11,7 @@ class MLP(nn.Module):
         self.layer1 = nn.Linear(in_features=d_model, out_features=2048)
         self.layer2 = nn.Linear(in_features=2048, out_features=d_model)
 
+        self.dropout = nn.Dropout(p=0.1)
         self.layer_norm = nn.LayerNorm((seq_len, d_model))
 
 
@@ -23,6 +24,9 @@ class MLP(nn.Module):
         X = self.layer1(X)
         X = F.relu(X)
         X = self.layer2(X)
+
+        # Apply dropout
+        X = self.dropout(X)
 
         # Add residual connection and layer norm
         X = X + X_resid

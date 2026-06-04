@@ -15,6 +15,7 @@ class OptimusPrime(nn.Module):
 
         self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
         self.positional_encoding = PositionalEncoding()
+        self.dropout = nn.Dropout(p=0.1)
 
         self.encoder = nn.ModuleList()
         for _ in range(6):
@@ -32,6 +33,7 @@ class OptimusPrime(nn.Module):
         # Embed input and output sequences
         X = self.embedding(X) * (self.d_model ** 0.5)
         X = self.positional_encoding(X)
+        X = self.dropout(X)
 
         Y = self.embedding(Y) * (self.d_model ** 0.5)
         Y = self.positional_encoding(Y)

@@ -13,6 +13,7 @@ class Bumblebee(nn.Module):
 
         self.embedding = nn.Embedding(num_embeddings=vocab_size, embedding_dim=d_model)
         self.positional_encoding = PositionalEncoding()
+        self.dropout = nn.Dropout(p=0.1)
 
         self.decoder = nn.ModuleList()
         for _ in range(12): 
@@ -26,6 +27,7 @@ class Bumblebee(nn.Module):
         # Embed input and output sequences
         X = self.embedding(X) * (self.d_model ** 0.5)
         X = self.positional_encoding(X)
+        X = self.dropout(X)
 
         for layer in self.decoder:
             X = layer(X)
