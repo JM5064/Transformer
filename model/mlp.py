@@ -5,14 +5,14 @@ import torch.nn.functional as F
 
 class MLP(nn.Module):
 
-    def __init__(self, d_model=512, seq_len=128):
+    def __init__(self, d_model=512):
         super().__init__()
 
         self.layer1 = nn.Linear(in_features=d_model, out_features=2048)
         self.layer2 = nn.Linear(in_features=2048, out_features=d_model)
 
         self.dropout = nn.Dropout(p=0.1)
-        self.layer_norm = nn.LayerNorm((seq_len, d_model))
+        self.layer_norm = nn.LayerNorm(d_model)
 
 
     def forward(self, X):
