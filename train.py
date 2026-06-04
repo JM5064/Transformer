@@ -18,7 +18,7 @@ def validate(model, val_loader, loss_func):
             Y = Y.to(DEVICE)
 
             # Get predictions
-            preds = model(X, Y)
+            preds = model(X)
             loss = loss_func(preds, Y)
             total_loss += loss.item()
 
@@ -63,7 +63,7 @@ def train(
         optimizer.zero_grad()
 
         # Get predictions
-        preds = model(X, Y)
+        preds = model(X)
 
         loss = loss_func(preds, Y)
         loss.backward()
