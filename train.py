@@ -42,7 +42,7 @@ def train(
         scheduler,
         num_epochs,
         start_epoch=0,
-        val_every=500,
+        val_every=109,
         runs_dir="runs",
     ):
     log_directory = runs_dir

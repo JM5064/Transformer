@@ -21,6 +21,7 @@ class MultiheadedAttention(nn.Module):
         # (d_k x num_heads x d_model) x 4 params
 
         self.dropout = nn.Dropout(p=0.1)
+        self.attention_dropout = nn.Dropout(p=0.1)
         self.layer_norm = nn.LayerNorm(d_model)
         # d_model x 2 params
 
@@ -74,7 +75,7 @@ class MultiheadedAttention(nn.Module):
         
         after_softmax = torch.softmax(before_softmax, dim=-1)
 
-        attention = after_softmax @ V
+        attention = self.attention_dropout(after_softmax) @ V
 
         # Concatenate heads
         attention = attention.transpose(1, 2).reshape(-1, self.seq_len, self.d_k * self.num_heads)

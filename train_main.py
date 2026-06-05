@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     num_epochs = 5
     total_steps = len(train_loader) * num_epochs
-    num_warmup_steps = total_steps // 15
+    num_warmup_steps = total_steps // 10
 
 
     def get_scheduler(optimizer, num_warmup_steps, total_steps):

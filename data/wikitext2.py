@@ -44,7 +44,7 @@ class WikiText2(Dataset):
             input_tokens (list[int]): tokenized training sample
             target_tokens (list[int]): tokenized target of the training sample
         """
-        skip = self.seq_len // 4
+        skip = self.seq_len
         index *= skip
 
         input_tokens = self.encoded_text[index : index + self.seq_len]
@@ -54,7 +54,7 @@ class WikiText2(Dataset):
     
 
     def __len__(self):
-        return (len(self.encoded_text) - self.seq_len - 1) // (self.seq_len // 4) + 1
+        return (len(self.encoded_text) - self.seq_len - 1) // (self.seq_len) + 1
     
 
     def get_vocab_size(self):
