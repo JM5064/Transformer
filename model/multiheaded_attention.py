@@ -47,6 +47,9 @@ class MultiheadedAttention(nn.Module):
 
         X_resid = Y
 
+        X = self.layer_norm(X)
+        Y = self.layer_norm(Y)
+
         # Compute query, key, and value matrices
         Q = Y @ self.W_Q
         K = X @ self.W_K
@@ -82,8 +85,6 @@ class MultiheadedAttention(nn.Module):
     
         # Add residual connection, and layer norm
         X = attention + X_resid
-
-        X = self.layer_norm(X)
 
         return X
     

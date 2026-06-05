@@ -20,6 +20,8 @@ class MLP(nn.Module):
 
         X_resid = X
 
+        X = self.layer_norm(X)
+
         # Pass through mlp
         X = self.layer1(X)
         X = F.relu(X)
@@ -30,8 +32,6 @@ class MLP(nn.Module):
 
         # Add residual connection and layer norm
         X = X + X_resid
-
-        X = self.layer_norm(X)
 
         return X
     
