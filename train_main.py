@@ -12,7 +12,7 @@ from utils import DEVICE
 if __name__ == "__main__":
     # Load dataset
     wikitext2_train = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
-    wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json', percent=0.1)
+    wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
     wikitext2_test = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
 
     # # FOR TESTING
@@ -36,17 +36,23 @@ if __name__ == "__main__":
 
     model = model.to(DEVICE)
 
-    num_warmup_steps = 4000
+    num_epochs = 5
+    total_steps = len(train_loader) * num_epochs
+    num_warmup_steps = total_steps // 15
 
 
-    def update_learning_rate(optimizer, step_num):
-        new_lr = d_model ** -0.5 * min(step_num ** -0.5, step_num * num_warmup_steps ** -1.5)
+    def get_scheduler(optimizer, num_warmup_steps, total_steps):
+        warmup_scheduler = optim.lr_scheduler.LinearLR(optimizer, start_factor=1/num_warmup_steps, total_iters=num_warmup_steps)
 
-        for param_group in optimizer.param_groups:
-            param_group['lr'] = new_lr
+        cosine_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=total_steps-num_warmup_steps, eta_min=1e-5)
+
+        return optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup_scheduler, cosine_scheduler], milestones=[num_warmup_steps])
+    
+    scheduler = get_scheduler(optimizer, num_warmup_steps, total_steps)
     
     # start training (!!)
-    train(model, train_loader, val_loader, test_loader, loss_func, optimizer, update_learning_rate, 
+    train(model, train_loader, val_loader, test_loader, loss_func, optimizer, scheduler, 
+          num_epochs=5,
           start_epoch=0,
           runs_dir='runs'
     )    
