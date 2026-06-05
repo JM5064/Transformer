@@ -1,8 +1,8 @@
 import os
 import pandas as pd
 
-from special_chars import UNK
-import bpe
+from data.special_chars import UNK
+import data.bpe as bpe
 
 
 class DatasetCreator:
@@ -90,13 +90,14 @@ class DatasetCreator:
         """
 
         encoded_text = []
+        vocab = bpe.load_from_file(self.vocab_json)
         for token in tokenized_text:
             if token in self.encoding:
                 # Encode token
                 encoded_text.append(self.encoding[token])
             else:
                 # Append unknown character if token not in vocabulary
-                encoded_text.append(UNK)
+                encoded_text.append(vocab[UNK])
 
         return encoded_text
 
@@ -115,11 +116,11 @@ class DatasetCreator:
     
 
 if __name__ == "__main__":
-    train_set = DatasetCreator(
-        split='train', 
-        parquet_file='data/wikitext2/train-00000-of-00001.parquet',
-        encoded_text_json='data/wikitext2/encoded_text_train.json'
-    )
+    # train_set = DatasetCreator(
+    #     split='train', 
+    #     parquet_file='data/wikitext2/train-00000-of-00001.parquet',
+    #     encoded_text_json='data/wikitext2/encoded_text_train.json'
+    # )
 
     val_set = DatasetCreator(
         split='val', 
