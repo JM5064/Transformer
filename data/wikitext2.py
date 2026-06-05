@@ -8,7 +8,6 @@ class WikiText2(Dataset):
     def __init__(self, seq_len=128, 
             encoded_text_json='data/wikitext2/encoded_text_train.json',
             vocab_json='data/wikitext2/vocab.json', 
-            percent=1.0
         ):
         """Make dataset from encoded text and vocabulary
 
@@ -19,13 +18,11 @@ class WikiText2(Dataset):
                 Defaults to 'data/wikitext2/encoded_text.json'.
             vocab_json (str, optional): file path of vocabulary. 
                 Defaults to 'data/wikitext2/vocab.json'.
-            percent (float): percent of the dataset to take from
         """
 
         super().__init__()
 
         self.seq_len = seq_len
-        self.percent = percent
 
         # Load data files
         self.encoded_text = load_from_file(encoded_text_json)
@@ -47,18 +44,17 @@ class WikiText2(Dataset):
             input_tokens (list[int]): tokenized training sample
             target_tokens (list[int]): tokenized target of the training sample
         """
-        skip = int((self.seq_len // 4) * (1 // self.percent))
+        skip = self.seq_len // 4
         index *= skip
 
         input_tokens = self.encoded_text[index : index + self.seq_len]
         target_tokens = self.encoded_text[index + 1 : index + self.seq_len + 1]
 
-        return input_tokens
-        # return torch.tensor(input_tokens), torch.tensor(target_tokens)
+        return torch.tensor(input_tokens), torch.tensor(target_tokens)
     
 
     def __len__(self):
-        return int(len(self.encoded_text) // 4 * self.percent) - self.seq_len
+        return (len(self.encoded_text) - self.seq_len - 1) // (self.seq_len // 4) + 1
     
 
     def get_vocab_size(self):
@@ -67,12 +63,8 @@ class WikiText2(Dataset):
 
 if __name__ == "__main__":
     train_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
-    val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json', percent=0.1)
+    val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
     test_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
 
-    # print(train_set[0])
-    # print()
-    # print(train_set[1])
     print("Train set:", len(train_set), "Val set:", len(val_set))
-
-    print(val_set[209])
+    
