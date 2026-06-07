@@ -250,6 +250,6 @@ def apply_merge_pairs(text, merge_pairs):
         pair = (pair[0], pair[1])
         chars = merge_pair(pair, chars, vocab, pairs)
         
-        print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
+        # print("Merge ", i, "took", (time.time() - s) * 1000, "ms")
 
     return chars

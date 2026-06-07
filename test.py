@@ -7,6 +7,61 @@ from train import validate
 from model.loss import CrossEntropyLoss
 from data.wikitext2 import WikiText2
 from utils import DEVICE
+import data.bpe
+from data.special_chars import EOS, UNK
+
+
+def greedypredict(model, input, max_iters=20):
+    # Get vocab
+    merge_pairs = data.bpe.load_from_file('data/wikitext2/merge_pairs.json')
+    vocab = data.bpe.load_from_file('data/wikitext2/vocab.json')
+    encoding, decoding = data.bpe.make_mapping(vocab)
+
+    # Encode input
+    tokenized_input = data.bpe.apply_merge_pairs(input, merge_pairs)
+    encoded_input = []
+    for t in tokenized_input:
+        encoded_input.append(encoding.get(t, encoding[UNK]))
+
+    # Potentially in-context learning if input length > seq_len ?????
+
+    # Take seq_len tokens from end of input (crop/pad if needed)
+    l = 128
+    if len(encoded_input) > l:
+        context = encoded_input[-l:]
+    elif len(encoded_input) < l:
+        context = [encoding[EOS]] * (l - len(encoded_input)) + encoded_input
+    else:
+        context = encoded_input
+
+    # Convert to tensor
+    context = torch.tensor(context)
+
+    # Predict for max number of iterations or until EOS
+    encoded_output = []
+    model.eval()
+    with torch.no_grad():
+        context = context.to(DEVICE)
+
+        for i in range(max_iters):
+            preds = model(context)
+            best = preds[0].argmax(dim=1)
+            best = best.squeeze().tolist()
+            best_next = best[-1]
+
+            if EOS in decoding[best_next]:
+                break
+            else:
+                encoded_output.append(best_next)
+                context = context.squeeze().tolist()
+                context = context[1:] + [best_next]
+                context = torch.tensor(context)
+                context = context.to(DEVICE)
+
+    tokenized_output = [decoding[t] for t in encoded_output]
+    output = "".join(tokenized_output)
+    print("Input:", input)
+    print("Output:", output)
 
 
 if __name__ == "__main__":
@@ -39,9 +94,8 @@ if __name__ == "__main__":
     model.load_state_dict(model_state_dict)
 
     print("Testing model...")
-    metrics = validate(model, test_loader, CrossEntropyLoss(vocab_size=VOCAB_SIZE, label_smoothing=0.0))
+    metrics = validate(model, test_loader, loss_func)
     print(metrics)
 
-
-
+    greedypredict(model, "when the", 30)
     
