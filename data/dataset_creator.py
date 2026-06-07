@@ -97,7 +97,7 @@ class DatasetCreator:
                 encoded_text.append(self.encoding[token])
             else:
                 # Append unknown character if token not in vocabulary
-                encoded_text.append(vocab[UNK])
+                encoded_text.append(self.encoding[UNK])
 
         return encoded_text
 
