@@ -22,11 +22,6 @@ def validate(model, val_loader, loss_func):
             loss = loss_func(preds, Y)
             total_loss += loss.item()
 
-            print(Y[0])
-            print()
-            print(preds[0].argmax(dim=1))
-            print("------------")
-
     average_val_loss = total_loss / len(val_loader)
     
     metrics = {

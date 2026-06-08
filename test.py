@@ -11,14 +11,14 @@ import data.bpe
 from data.special_chars import EOS, UNK
 
 
-def greedypredict(model, input, max_iters=20):
+def greedypredict(model, input_seq, max_iters=20):
     # Get vocab
     merge_pairs = data.bpe.load_from_file('data/wikitext2/merge_pairs.json')
     vocab = data.bpe.load_from_file('data/wikitext2/vocab.json')
     encoding, decoding = data.bpe.make_mapping(vocab)
 
     # Encode input
-    tokenized_input = data.bpe.apply_merge_pairs(input, merge_pairs)
+    tokenized_input = data.bpe.apply_merge_pairs([input_seq], merge_pairs)
     encoded_input = []
     for t in tokenized_input:
         encoded_input.append(encoding.get(t, encoding[UNK]))
@@ -60,7 +60,7 @@ def greedypredict(model, input, max_iters=20):
 
     tokenized_output = [decoding[t] for t in encoded_output]
     output = "".join(tokenized_output)
-    print("Input:", input)
+    print("Input:", input_seq)
     print("Output:", output)
 
 
@@ -90,12 +90,12 @@ if __name__ == "__main__":
     # Modify model path for desired model
     MODEL_PATH = 'runs/every128,attentiondropout/best.pt'
 
-    model_state_dict = torch.load(MODEL_PATH)['state_dict']
+    model_state_dict = torch.load(MODEL_PATH, map_location=DEVICE)['state_dict']
     model.load_state_dict(model_state_dict)
 
     print("Testing model...")
     metrics = validate(model, test_loader, loss_func)
     print(metrics)
 
-    greedypredict(model, "when the", 30)
+    greedypredict(model, "Lionel Andres Messi ( born 24 June 1987 ) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team . Widely regarded as ", max_iters=50)
     
