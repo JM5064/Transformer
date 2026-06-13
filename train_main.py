@@ -31,7 +31,7 @@ if __name__ == "__main__":
     d_model = 512
     model = Bumblebee(vocab_size=VOCAB_SIZE, d_model=d_model)
     
-    loss_func = CrossEntropyLoss(vocab_size=VOCAB_SIZE)
+    loss_func = CrossEntropyLoss(label_smoothing=0.1)
     optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9, weight_decay=0)
 
     model = model.to(DEVICE)

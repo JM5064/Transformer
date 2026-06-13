@@ -19,20 +19,11 @@ def greedypredict(model, input_seq, max_iters=20):
 
     # Encode input
     tokenized_input = data.bpe.apply_merge_pairs([input_seq], merge_pairs)
-    encoded_input = []
+    context = []
     for t in tokenized_input:
-        encoded_input.append(encoding.get(t, encoding[UNK]))
+        context.append(encoding.get(t, encoding[UNK]))
 
     # Potentially in-context learning if input length > seq_len ?????
-
-    # Take seq_len tokens from end of input (crop/pad if needed)
-    l = 128
-    if len(encoded_input) > l:
-        context = encoded_input[-l:]
-    elif len(encoded_input) < l:
-        context = [encoding[EOS]] * (l - len(encoded_input)) + encoded_input
-    else:
-        context = encoded_input
 
     # Convert to tensor
     context = torch.tensor(context)
@@ -61,6 +52,7 @@ def greedypredict(model, input_seq, max_iters=20):
     tokenized_output = [decoding[t] for t in encoded_output]
     output = "".join(tokenized_output)
     print("Input:", input_seq)
+    print()
     print("Output:", output)
 
 
@@ -82,7 +74,7 @@ if __name__ == "__main__":
     d_model = 512
     model = Bumblebee(vocab_size=VOCAB_SIZE, d_model=d_model)
     
-    loss_func = CrossEntropyLoss(vocab_size=VOCAB_SIZE, label_smoothing=0.0)
+    loss_func = CrossEntropyLoss(label_smoothing=0.0)
     optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9, weight_decay=0)
 
     model = model.to(DEVICE)
@@ -93,9 +85,10 @@ if __name__ == "__main__":
     model_state_dict = torch.load(MODEL_PATH, map_location=DEVICE)['state_dict']
     model.load_state_dict(model_state_dict)
 
-    print("Testing model...")
-    metrics = validate(model, test_loader, loss_func)
-    print(metrics)
+    # print("Testing model...")
+    # metrics = validate(model, test_loader, loss_func)
+    # print(metrics)
 
-    greedypredict(model, "Lionel Andres Messi ( born 24 June 1987 ) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team . Widely regarded as ", max_iters=50)
+    text = 'Lionel Andres Messi ( born 24 June 1987 ) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team . Widely regarded as the '
+    greedypredict(model, text, max_iters=50)
     
