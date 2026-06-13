@@ -4,12 +4,10 @@ import torch.nn as nn
 
 class CrossEntropyLoss(nn.Module):
 
-    def __init__(self, vocab_size, label_smoothing=0.1):
+    def __init__(self, label_smoothing=0.1):
         super().__init__()
 
         self.label_smoothing = label_smoothing
-
-        self.small_number = label_smoothing / (vocab_size-1)
     
 
     def forward(self, preds, labels):
@@ -18,13 +16,6 @@ class CrossEntropyLoss(nn.Module):
         labels: [batch, seq_len]
 
         """
-        
-        # Make the labels matrix
-        # labels_matrix = torch.full_like(preds, self.small_number)
-        # labels_matrix.scatter_(2, labels.unsqueeze(-1), 1.0 - self.label_smoothing)
-
-        # loss_og = -(torch.log(preds) * labels_matrix).sum(dim=-1)
-        # loss_og = loss_og.mean()
 
         # Get probabilities of the true values in the prediction
         log_probs = torch.log_softmax(preds, dim=-1)
