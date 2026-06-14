@@ -31,7 +31,7 @@ class DatasetCreator:
 
         # Create tokenizer
         self.tokenizer = Tokenizer(BPE(unk_token=UNK))
-        self.trainer = BpeTrainer(special_tokens=[UNK, EOS], vocab_size=30000)
+        self.trainer = BpeTrainer(special_tokens=[UNK, EOS], vocab_size=30000, min_frequency=10)
 
         self.create_data(min_length=50)
 
@@ -77,13 +77,13 @@ class DatasetCreator:
         # Encode dataset
         print("Encoding dataset...")
         encoded_text = []
-        tokenized_text = []
+        vocab_counts = Counter()
 
         for text in self.array_text:
             encoded_text_sample = self.tokenizer.encode(text)
 
             encoded_text.extend(encoded_text_sample.ids)
-            tokenized_text.extend(encoded_text_sample.tokens)
+            vocab_counts.update(encoded_text_sample.tokens)
         
         bpe.save_to_file(encoded_text, self.encoded_text_json)
 
@@ -93,8 +93,17 @@ class DatasetCreator:
         
         # Save vocab
         print("Saving vocab...")
-        vocab_counts = Counter(tokenized_text)
-        bpe.save_to_file(vocab_counts, self.vocab_json, indent=2)
+        vocab_dict = self.tokenizer.get_vocab()
+
+        # Sort tokens by id
+        ordered_tokens = [token for token, idx in sorted(vocab_dict.items(), key=lambda x: x[1])]
+
+        # Order token counts
+        ordered_vocab_counts = {}
+        for token in ordered_tokens:
+            ordered_vocab_counts[token] = vocab_counts[token]
+
+        bpe.save_to_file(ordered_vocab_counts, self.vocab_json, indent=2)
 
         # Load hugging face generated file
         print("Saving merge pairs...")
