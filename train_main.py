@@ -11,9 +11,10 @@ from utils import DEVICE
 
 if __name__ == "__main__":
     # Load dataset
-    wikitext2_train = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
-    wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
-    wikitext2_test = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
+    vocab_json = 'data/wikitext103/vocab.json'
+    wikitext2_train = WikiText2(encoded_text_json='data/wikitext103/encoded_text_train.json', vocab_json=vocab_json)
+    wikitext2_val = WikiText2(encoded_text_json='data/wikitext103/encoded_text_val.json', vocab_json=vocab_json)
+    wikitext2_test = WikiText2(encoded_text_json='data/wikitext103/encoded_text_test.json', vocab_json=vocab_json)
 
     # # FOR TESTING
     # wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_mini.json')
@@ -36,7 +37,7 @@ if __name__ == "__main__":
 
     model = model.to(DEVICE)
 
-    num_epochs = 5
+    num_epochs = 2
     total_steps = len(train_loader) * num_epochs
     num_warmup_steps = total_steps // 10
 

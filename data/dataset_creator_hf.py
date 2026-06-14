@@ -140,11 +140,13 @@ if __name__ == "__main__":
     val_set = DatasetCreator(
         split='val', 
         parquet_file='data/wikitext103/validation-00000-of-00001.parquet',
-        encoded_text_json='data/wikitext103/encoded_text_val.json'
+        encoded_text_json='data/wikitext103/encoded_text_val.json',
+        hf_data_json='data/wikitext103/hf_data_json.json'
     )
 
     test_set = DatasetCreator(
         split='test', 
         parquet_file='data/wikitext103/test-00000-of-00001.parquet',
-        encoded_text_json='data/wikitext103/encoded_text_test.json'
+        encoded_text_json='data/wikitext103/encoded_text_test.json',
+        hf_data_json='data/wikitext103/hf_data_json.json'
     )

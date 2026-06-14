@@ -41,7 +41,7 @@ def train(
         scheduler,
         num_epochs,
         start_epoch=0,
-        val_every=109,
+        val_every=1002,
         runs_dir="runs",
     ):
     log_directory = runs_dir
@@ -98,6 +98,7 @@ def train(
                     'epoch': step_num + 1,
                     'state_dict': model.state_dict(),
                     'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
                 }
 
                 # Save best model
