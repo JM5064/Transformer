@@ -1,5 +1,4 @@
 import torch
-import torch.optim as optim
 from torch.utils.data.dataloader import DataLoader
 
 from model.bumblebee.bumblebee import Bumblebee
@@ -11,14 +10,27 @@ import data.bpe
 from data.special_chars import EOS, UNK
 
 
-def greedypredict(model, input_seq, max_iters=20):
+def test_model(model, test_set, batch_size):
+    # Create dataloader
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=2)
+
+    loss_func = CrossEntropyLoss(label_smoothing=0.0)
+
+    print("Testing model...")
+    metrics = validate(model, test_loader, loss_func)
+
+    print("Cross-entropy loss:", metrics['average_val_loss'])
+    print("Perplexity:", 2.71828183 ** metrics['average_val_loss'])
+
+
+def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, ignore_eos=False):
     # Get vocab
-    merge_pairs = data.bpe.load_from_file('data/wikitext2/merge_pairs.json')
-    vocab = data.bpe.load_from_file('data/wikitext2/vocab.json')
+    merge_pairs = data.bpe.load_from_file(merge_pairs_json)
+    vocab = data.bpe.load_from_file(vocab_json)
     encoding, decoding = data.bpe.make_mapping(vocab)
 
     # Encode input
-    tokenized_input = data.bpe.apply_merge_pairs([input_seq], merge_pairs)
+    tokenized_input = data.bpe.apply_merge_pairs([input_seq], merge_pairs)[:-1]
     context = []
     for t in tokenized_input:
         context.append(encoding.get(t, encoding[UNK]))
@@ -40,7 +52,7 @@ def greedypredict(model, input_seq, max_iters=20):
             best = best.squeeze().tolist()
             best_next = best[-1]
 
-            if EOS in decoding[best_next]:
+            if EOS in decoding[best_next] and not ignore_eos:
                 break
             else:
                 encoded_output.append(best_next)
@@ -57,38 +69,34 @@ def greedypredict(model, input_seq, max_iters=20):
 
 
 if __name__ == "__main__":
-    # Load dataset
-    wikitext2_test = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
+    # Modify model path for desired model
+    MODEL_PATH = 'best103.pt'
 
-    # # FOR TESTING
-    # wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_mini.json')
+    encoded_text_json = 'data/wikitext103/encoded_text_test.json'
+    merge_pairs_json = 'data/wikitext103/merge_pairs.json'
+    vocab_json = 'data/wikitext103/vocab.json'
+
+    # Load dataset
+    wikitext2_test = WikiText2(
+        encoded_text_json=encoded_text_json,
+        vocab_json=vocab_json
+    )
 
     # Define params
     VOCAB_SIZE = wikitext2_test.get_vocab_size()
     BATCH_SIZE = 32
 
-    # Create dataloaders
-    test_loader = DataLoader(wikitext2_test, batch_size=BATCH_SIZE, shuffle=False, num_workers=2)
-
-
+    # Load model
     d_model = 512
     model = Bumblebee(vocab_size=VOCAB_SIZE, d_model=d_model)
-    
-    loss_func = CrossEntropyLoss(label_smoothing=0.0)
-    optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.98), eps=1e-9, weight_decay=0)
-
     model = model.to(DEVICE)
-
-    # Modify model path for desired model
-    MODEL_PATH = 'runs/every128,attentiondropout/best.pt'
 
     model_state_dict = torch.load(MODEL_PATH, map_location=DEVICE)['state_dict']
     model.load_state_dict(model_state_dict)
 
-    # print("Testing model...")
-    # metrics = validate(model, test_loader, loss_func)
-    # print(metrics)
+    # Uncomment to test model
+    test_model(model, wikitext2_test, BATCH_SIZE)
 
-    text = 'Lionel Andres Messi ( born 24 June 1987 ) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team . Widely regarded as the '
-    greedypredict(model, text, max_iters=50)
+    text = 'In 1969 , the Apollo 11 mission '
+    greedypredict(model, text, merge_pairs_json, vocab_json, max_iters=50, ignore_eos=False,)
     
