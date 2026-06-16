@@ -23,7 +23,7 @@ def test_model(model, test_set, batch_size):
     print("Perplexity:", 2.71828183 ** metrics['average_val_loss'])
 
 
-def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, ignore_eos=False):
+def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, ignore_eos=False, temperature=0):
     # Get vocab
     merge_pairs = data.bpe.load_from_file(merge_pairs_json)
     vocab = data.bpe.load_from_file(vocab_json)
@@ -48,9 +48,18 @@ def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, 
 
         for i in range(max_iters):
             preds = model(context)
-            best = preds[0].argmax(dim=1)
-            best = best.squeeze().tolist()
-            best_next = best[-1]
+
+            if temperature == 0:
+                # greedy
+                best = preds[0].argmax(dim=1)
+                best = best.squeeze().tolist()
+                best_next = best[-1]
+            else:
+                # Apply softmax
+                softmax = torch.softmax(preds / temperature, dim=2)
+
+                # Draw a random token weighted by probability for the next token
+                best_next = torch.multinomial(softmax[0][-1], num_samples=1).item()         
 
             if EOS in decoding[best_next] and not ignore_eos:
                 break
@@ -95,8 +104,8 @@ if __name__ == "__main__":
     model.load_state_dict(model_state_dict)
 
     # Uncomment to test model
-    test_model(model, wikitext2_test, BATCH_SIZE)
+    # test_model(model, wikitext2_test, BATCH_SIZE)
 
-    text = 'In 1969 , the Apollo 11 mission '
-    greedypredict(model, text, merge_pairs_json, vocab_json, max_iters=50, ignore_eos=False,)
+    text = "The Montreal Canadiens , officially Club de hockey Canadien and colloquially known as the Habs , "
+    greedypredict(model, text, merge_pairs_json, vocab_json, max_iters=50, ignore_eos=False, temperature=0.175)
     
