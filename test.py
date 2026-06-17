@@ -23,9 +23,9 @@ def test_model(model, test_set, batch_size):
     print("Perplexity:", 2.71828183 ** metrics['average_val_loss'])
 
 
-def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, ignore_eos=False, temperature=0):
+def greedypredict(model, input_seq, tokenizer_json, max_iters=20, ignore_eos=False, temperature=0):
     # Get vocab
-    tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
+    tokenizer = Tokenizer.from_file(tokenizer_json)
 
     # Encode input
     tokenized_input = tokenizer.encode(input_seq)
@@ -71,6 +71,64 @@ def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, 
     print()
     print("Output:", output)
 
+def topPpredict(model, input_seq, tokenizer_json, p=0.85, max_iters=20, ignore_eos=False, temperature=0):
+    # Get vocab
+    tokenizer = Tokenizer.from_file(tokenizer_json)
+
+    # Encode input
+    tokenized_input = tokenizer.encode(input_seq)
+    context = tokenized_input.ids
+
+    # Convert to tensor
+    context = torch.tensor(context)
+
+    # Predict for max number of iterations or until EOS
+    encoded_output = []
+    model.eval()
+    with torch.no_grad():
+        context = context.to(DEVICE)
+
+        for i in range(max_iters):
+            preds = model(context)
+
+            # Apply softmax
+            if temperature == 0:
+                softmax = torch.softmax(preds, dim=2)
+            else:
+                softmax = torch.softmax(preds/temperature, dim=2)
+
+            # Sort and take ones that add up to p
+            probs, indices = torch.sort(softmax[0][-1], descending=True)
+            total_prob = 0
+            for i in range(len(probs)):
+                total_prob += probs[i]
+                if total_prob > p:
+                    break
+            probs = probs[:i+1]
+            indices = indices[:i+1]
+
+            # Softmax again (???)
+            softmax = torch.softmax(probs, dim=-1)
+
+            # Completely random
+            best_next = indices[torch.randint(0, len(indices), size=(1,))]
+
+            # Draw a random token weighted by probability for the next token
+            # best_next = indices[torch.multinomial(softmax, num_samples=1).item()]
+
+            if EOS in tokenizer.decode([best_next]) and not ignore_eos:
+                break
+            else:
+                encoded_output.append(best_next)
+                context = context.squeeze().tolist()
+                context = context[1:] + [best_next]
+                context = torch.tensor(context)
+                context = context.to(DEVICE)
+
+    output = tokenizer.decode(encoded_output)
+    print("Input:", input_seq)
+    print()
+    print("Output:", output)
 
 if __name__ == "__main__":
     # Modify model path for desired model
@@ -102,5 +160,5 @@ if __name__ == "__main__":
     # test_model(model, wikitext2_test, BATCH_SIZE)
 
     text = "The Montreal Canadiens , officially Club de hockey Canadien and colloquially known as the Habs , "
-    greedypredict(model, text, merge_pairs_json, vocab_json, max_iters=50, ignore_eos=False, temperature=0.175)
+    topPpredict(model, text, "data/wikitext103/hf_data_json.json", max_iters=50, ignore_eos=False, temperature=0.2)
     
