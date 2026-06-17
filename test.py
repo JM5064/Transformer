@@ -1,12 +1,12 @@
 import torch
 from torch.utils.data.dataloader import DataLoader
+from tokenizers import Tokenizer
 
 from model.bumblebee.bumblebee import Bumblebee
 from train import validate
 from model.loss import CrossEntropyLoss
 from data.wikitext2 import WikiText2
 from utils import DEVICE
-import data.bpe
 from data.special_chars import EOS, UNK
 
 
@@ -25,22 +25,18 @@ def test_model(model, test_set, batch_size):
 
 def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, ignore_eos=False, temperature=0):
     # Get vocab
-    merge_pairs = data.bpe.load_from_file(merge_pairs_json)
-    vocab = data.bpe.load_from_file(vocab_json)
-    encoding, decoding = data.bpe.make_mapping(vocab)
+    tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
 
     # Encode input
-    tokenized_input = data.bpe.apply_merge_pairs([input_seq], merge_pairs)[:-1]
-    context = []
-    for t in tokenized_input:
-        context.append(encoding.get(t, encoding[UNK]))
+    tokenized_input = tokenizer.encode(input_seq)
+    context = tokenized_input.ids
 
     # Potentially in-context learning if input length > seq_len ?????
 
     # Convert to tensor
     context = torch.tensor(context)
 
-    # Predict for max number of iterations or until EOS
+    # # Predict for max number of iterations or until EOS
     encoded_output = []
     model.eval()
     with torch.no_grad():
@@ -61,7 +57,7 @@ def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, 
                 # Draw a random token weighted by probability for the next token
                 best_next = torch.multinomial(softmax[0][-1], num_samples=1).item()         
 
-            if EOS in decoding[best_next] and not ignore_eos:
+            if EOS in tokenizer.decode([best_next]) and not ignore_eos:
                 break
             else:
                 encoded_output.append(best_next)
@@ -70,8 +66,7 @@ def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, 
                 context = torch.tensor(context)
                 context = context.to(DEVICE)
 
-    tokenized_output = [decoding[t] for t in encoded_output]
-    output = "".join(tokenized_output)
+    output = tokenizer.decode(encoded_output)
     print("Input:", input_seq)
     print()
     print("Output:", output)
@@ -79,7 +74,7 @@ def greedypredict(model, input_seq, merge_pairs_json, vocab_json, max_iters=20, 
 
 if __name__ == "__main__":
     # Modify model path for desired model
-    MODEL_PATH = 'best103.pt'
+    MODEL_PATH = 'best.pt'
 
     encoded_text_json = 'data/wikitext103/encoded_text_test.json'
     merge_pairs_json = 'data/wikitext103/merge_pairs.json'
