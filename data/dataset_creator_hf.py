@@ -2,6 +2,8 @@ import pandas as pd
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
+from tokenizers.normalizers import NFD, StripAccents, Strip, Sequence
+from tokenizers.pre_tokenizers import Whitespace
 
 import os
 from collections import Counter
@@ -11,7 +13,7 @@ import data.bpe as bpe
 
 class DatasetCreator:
 
-    def __init__(self, split='train', parquet_file='data/wikitext2/train-00000-of-00001.parquet',
+    def __init__(self, split='train', parquet_file='data/original/train-wikitext2.parquet',
         encoded_text_json='data/wikitext2/encoded_text.json',
         vocab_json='data/wikitext2/vocab.json', 
         merge_pairs_json='data/wikitext2/merge_pairs.json',
@@ -33,10 +35,14 @@ class DatasetCreator:
         self.tokenizer = Tokenizer(BPE(unk_token=UNK))
         self.trainer = BpeTrainer(special_tokens=[UNK, EOS], vocab_size=30000, min_frequency=10)
 
-        self.create_data(min_length=50)
+        # Add normalizer and pre-tokenizer
+        self.tokenizer.normalizer = Sequence([Strip(), NFD(), StripAccents()])
+        self.tokenizer.pre_tokenizer = Whitespace()
+
+        self.train_tokenizer(min_length=50)
 
 
-    def create_data(self, min_length):
+    def train_tokenizer(self, min_length):
         """Runs BPE to create vocab, merge pairs, and encoded text
         Args:
             min_length (int) : threshold for removing empty/short paragraphs
@@ -53,7 +59,7 @@ class DatasetCreator:
         text = self.df.loc[:,"text"].to_list()
 
         # Remove empty/very short paragraphs, strip text, and add EOS
-        self.array_text = [t.strip("\n") + EOS for t in text if len(t) > min_length and t != ""]
+        self.array_text = [t.strip() + EOS for t in text if len(t) > min_length]
 
         # Run BPE if tokenizer doesn't exist
         if not self.file_exists(self.hf_data_json):
@@ -130,7 +136,7 @@ class DatasetCreator:
 if __name__ == "__main__":
     train_set = DatasetCreator(
         split='train', 
-        parquet_file='data/wikitext103/train.parquet',
+        parquet_file='data/original/train-wikitext103-ALL.parquet',
         encoded_text_json='data/wikitext103/encoded_text_train.json',
         vocab_json='data/wikitext103/vocab.json', 
         merge_pairs_json='data/wikitext103/merge_pairs.json',
@@ -139,14 +145,14 @@ if __name__ == "__main__":
 
     val_set = DatasetCreator(
         split='val', 
-        parquet_file='data/wikitext103/validation-00000-of-00001.parquet',
+        parquet_file='data/original/validation.parquet',
         encoded_text_json='data/wikitext103/encoded_text_val.json',
         hf_data_json='data/wikitext103/hf_data_json.json'
     )
 
     test_set = DatasetCreator(
         split='test', 
-        parquet_file='data/wikitext103/test-00000-of-00001.parquet',
+        parquet_file='data/original/test.parquet',
         encoded_text_json='data/wikitext103/encoded_text_test.json',
         hf_data_json='data/wikitext103/hf_data_json.json'
     )
