@@ -66,10 +66,14 @@ def greedypredict(model, input_seq, tokenizer_json, max_iters=20, ignore_eos=Fal
                 context = torch.tensor(context)
                 context = context.to(DEVICE)
 
-    output = tokenizer.decode(encoded_output)
+    output = ""
+    for encoded_token in encoded_output:
+        output += tokenizer.decode([encoded_token.item()])
+    
     print("Input:", input_seq)
     print()
     print("Output:", output)
+
 
 def topPpredict(model, input_seq, tokenizer_json, p=0.85, max_iters=20, ignore_eos=False, temperature=0):
     # Get vocab
@@ -125,14 +129,18 @@ def topPpredict(model, input_seq, tokenizer_json, p=0.85, max_iters=20, ignore_e
                 context = torch.tensor(context)
                 context = context.to(DEVICE)
 
-    output = tokenizer.decode(encoded_output)
+    output = ""
+    for encoded_token in encoded_output:
+        output += tokenizer.decode([encoded_token.item()])
+        
     print("Input:", input_seq)
     print()
     print("Output:", output)
 
+
 if __name__ == "__main__":
     # Modify model path for desired model
-    MODEL_PATH = 'best.pt'
+    MODEL_PATH = 'runs/wikitext103/best.pt'
 
     encoded_text_json = 'data/wikitext103/encoded_text_test.json'
     merge_pairs_json = 'data/wikitext103/merge_pairs.json'
