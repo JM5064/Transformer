@@ -5,7 +5,7 @@ from tokenizers import Tokenizer
 from model.bumblebee.bumblebee import Bumblebee
 from train import validate
 from model.loss import CrossEntropyLoss
-from data.wikitext2 import WikiText2
+from data.wikitext import WikiText
 from utils import DEVICE
 from data.special_chars import EOS, UNK
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     vocab_json = 'data/wikitext103/vocab.json'
 
     # Load dataset
-    wikitext2_test = WikiText2(
+    wikitext2_test = WikiText(
         encoded_text_json=encoded_text_json,
         vocab_json=vocab_json
     )

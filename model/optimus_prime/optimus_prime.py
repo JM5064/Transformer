@@ -50,11 +50,11 @@ class OptimusPrime(nn.Module):
 
 
 if __name__ == "__main__":
-    from data.wikitext2 import WikiText2
+    from data.wikitext import WikiText
     from torch.utils.data.dataloader import DataLoader
 
 
-    wikitext2 = WikiText2()
+    wikitext2 = WikiText()
 
     dl = DataLoader(wikitext2, batch_size=1)
     op = OptimusPrime(vocab_size=wikitext2.get_vocab_size())

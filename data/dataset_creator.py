@@ -7,7 +7,7 @@ import data.bpe as bpe
 
 class DatasetCreator:
 
-    def __init__(self, split='train', parquet_file='data/wikitext2/train-00000-of-00001.parquet',
+    def __init__(self, split='train', parquet_file='data/original/train-wikitext2.parquet',
         encoded_text_json='data/wikitext2/encoded_text.json',
         vocab_json='data/wikitext2/vocab.json', 
         merge_pairs_json='data/wikitext2/merge_pairs.json'
@@ -118,18 +118,18 @@ class DatasetCreator:
 if __name__ == "__main__":
     # train_set = DatasetCreator(
     #     split='train', 
-    #     parquet_file='data/wikitext2/train-00000-of-00001.parquet',
+    #     parquet_file='data/origina/train-wikitext2.parquet',
     #     encoded_text_json='data/wikitext2/encoded_text_train.json'
     # )
 
     val_set = DatasetCreator(
         split='val', 
-        parquet_file='data/wikitext2/validation-00000-of-00001.parquet',
+        parquet_file='data/original/validation.parquet',
         encoded_text_json='data/wikitext2/encoded_text_val.json'
     )
 
     test_set = DatasetCreator(
         split='test', 
-        parquet_file='data/wikitext2/test-00000-of-00001.parquet',
+        parquet_file='data/original/test.parquet',
         encoded_text_json='data/wikitext2/encoded_text_test.json'
     )

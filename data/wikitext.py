@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-class WikiText2(Dataset):
+class WikiText(Dataset):
 
     def __init__(self, seq_len=128, 
             encoded_text_json='data/wikitext2/encoded_text_train.json',
@@ -62,9 +62,9 @@ class WikiText2(Dataset):
     
 
 if __name__ == "__main__":
-    train_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_train.json')
-    val_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_val.json')
-    test_set = WikiText2(encoded_text_json='data/wikitext2/encoded_text_test.json')
+    train_set = WikiText(encoded_text_json='data/wikitext2/encoded_text_train.json')
+    val_set = WikiText(encoded_text_json='data/wikitext2/encoded_text_val.json')
+    test_set = WikiText(encoded_text_json='data/wikitext2/encoded_text_test.json')
 
     print("Train set:", len(train_set), "Val set:", len(val_set))
     

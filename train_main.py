@@ -5,16 +5,16 @@ from torch.utils.data.dataloader import DataLoader
 from model.bumblebee.bumblebee import Bumblebee
 from train import train
 from model.loss import CrossEntropyLoss
-from data.wikitext2 import WikiText2
+from data.wikitext import WikiText
 from utils import DEVICE
 
 
 if __name__ == "__main__":
     # Load dataset
     vocab_json = 'data/wikitext103/vocab.json'
-    wikitext2_train = WikiText2(encoded_text_json='data/wikitext103/encoded_text_train.json', vocab_json=vocab_json)
-    wikitext2_val = WikiText2(encoded_text_json='data/wikitext103/encoded_text_val.json', vocab_json=vocab_json)
-    wikitext2_test = WikiText2(encoded_text_json='data/wikitext103/encoded_text_test.json', vocab_json=vocab_json)
+    wikitext2_train = WikiText(encoded_text_json='data/wikitext103/encoded_text_train.json', vocab_json=vocab_json)
+    wikitext2_val = WikiText(encoded_text_json='data/wikitext103/encoded_text_val.json', vocab_json=vocab_json)
+    wikitext2_test = WikiText(encoded_text_json='data/wikitext103/encoded_text_test.json', vocab_json=vocab_json)
 
     # # FOR TESTING
     # wikitext2_val = WikiText2(encoded_text_json='data/wikitext2/encoded_text_mini.json')
