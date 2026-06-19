@@ -66,9 +66,7 @@ def greedypredict(model, input_seq, tokenizer_json, max_iters=20, ignore_eos=Fal
                 context = torch.tensor(context)
                 context = context.to(DEVICE)
 
-    output = ""
-    for encoded_token in encoded_output:
-        output += tokenizer.decode([encoded_token.item()])
+    output = tokenizer.decode(encoded_output)
     
     print("Input:", input_seq)
     print()
@@ -129,9 +127,7 @@ def topPpredict(model, input_seq, tokenizer_json, p=0.85, max_iters=20, ignore_e
                 context = torch.tensor(context)
                 context = context.to(DEVICE)
 
-    output = ""
-    for encoded_token in encoded_output:
-        output += tokenizer.decode([encoded_token.item()])
+    output = tokenizer.decode(encoded_output)
         
     print("Input:", input_seq)
     print()
@@ -167,6 +163,6 @@ if __name__ == "__main__":
     # Uncomment to test model
     # test_model(model, wikitext2_test, BATCH_SIZE)
 
-    text = "The Montreal Canadiens , officially Club de hockey Canadien and colloquially known as the Habs , "
+    text = "Lionel Andrés Messi ( born 24 June 1987 ) is an Argentine professional footballer who plays as a forward for and captains both the Major League Soccer club Inter Miami and the Argentina national team . Widely known as "
     topPpredict(model, text, "data/wikitext103/hf_data_json.json", max_iters=50, ignore_eos=False, temperature=0.2)
     
