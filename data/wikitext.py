@@ -26,7 +26,7 @@ class WikiText(Dataset):
 
         # Load data files
         self.encoded_text = load_from_file(encoded_text_json)
-        # self.encoded_text = self.encoded_text[:int(len(self.encoded_text) * percent)]
+        self.encoded_text = torch.tensor(self.encoded_text, dtype=torch.long)
 
         self.vocab = load_from_file(vocab_json)
 
@@ -50,7 +50,7 @@ class WikiText(Dataset):
         input_tokens = self.encoded_text[index : index + self.seq_len]
         target_tokens = self.encoded_text[index + 1 : index + self.seq_len + 1]
 
-        return torch.tensor(input_tokens), torch.tensor(target_tokens)
+        return input_tokens.clone(), target_tokens.clone()
     
 
     def __len__(self):
