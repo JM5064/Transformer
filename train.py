@@ -41,7 +41,7 @@ def train(
         scheduler,
         num_epochs,
         start_epoch=0,
-        val_every=1002,
+        val_every=1007,
         runs_dir="runs",
     ):
     log_directory = runs_dir
@@ -76,7 +76,7 @@ def train(
 
             total_loss += loss.item()
 
-            if step_num % val_every == 0:
+            if step_num % val_every == 0 or step_num == len(train_loader):
                 print(f"\nEvaluating after step {step_num}")
                 # print and log metrics
                 average_train_loss = total_loss / val_every

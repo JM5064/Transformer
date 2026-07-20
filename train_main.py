@@ -6,7 +6,7 @@ from model.bumblebee.bumblebee import Bumblebee
 from train import train
 from model.loss import CrossEntropyLoss
 from data.wikitext import WikiText
-from utils import DEVICE
+from utils import DEVICE, load_checkpoint
 
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     model = model.to(DEVICE)
 
-    num_epochs = 2
+    num_epochs = 4
     total_steps = len(train_loader) * num_epochs
     num_warmup_steps = total_steps // 10
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     
     # start training (!!)
     train(model, train_loader, val_loader, test_loader, loss_func, optimizer, scheduler, 
-          num_epochs=5,
+          num_epochs=num_epochs,
           start_epoch=0,
           runs_dir='runs'
     )    
