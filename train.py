@@ -134,6 +134,8 @@ def train(
     metrics = validate(model, test_loader, loss_func)
     print("Testing Results")
     print(f'Test Loss:   {metrics["average_val_loss"]} ')
+    if classification:
+        print(f'Accuracy:   {metrics["accuracy"]}')
 
     test_logfile_path = log_directory + "/test_metrics.csv"
     log_results(test_logfile_path, metrics)
