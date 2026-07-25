@@ -2,6 +2,10 @@ data/original
 data/wikitext2
 data/wikitext103
 data/wikitext103_old
+data/wikitext103_pretokenizer
+data/uai_data/uai
+data/uai_data/uai_dataset
+data/uai_data/uai4_dataset
 
 *.DS_Store
 
