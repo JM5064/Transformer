@@ -1,4 +1,6 @@
 import json
+from tokenizers import Tokenizer
+import re
 import time
 
 
@@ -23,6 +25,11 @@ def remove_contents_with_link(member_data):
     """Removes messages with urls from a person's dataset"""
     return [message for message in member_data if 
             ('http' not in message['Contents'] and '://' not in message['Contents'])]
+
+
+def remove_quotes(member_data):
+    """Removes messages that quote other people (ie. start with "> ")"""
+    return [message for message in member_data if not message['Contents'].startswith("> ")]
 
 
 def lowercase_member_data(member_data):
@@ -57,6 +64,48 @@ def remove_messages_in_common(members_data):
     return refined_members_data
 
 
+def pad_special_characters(member_data):
+    member_data_copy = [message.copy() for message in member_data]
+
+    rules = {
+        r"([0-9]+),([0-9])+": r"\1 @,@ \2",         # 1,000         -> 1 @,@ 000
+        r"([0-9]+)\.([0-9])+": r"\1 @.@ \2",        # 3.14          -> 3 @.@ 14
+
+        r"([\S])-([\S])": r"\1 @-@ \2",             # hello-there   -> hello @-@ there
+
+        r"([\S])(['’])([mst])" : r"\1 \2\3",        # I'm -> I 'm
+        r"([\S])(['’])re" : r"\1 \2re",             # we're -> we 're
+        r"([\S])(['’])ll" : r"\1 \2ll",             # we'll -> we 'll
+        r"([\S])(['’])ve" : r"\1 \2ve",             # I've -> I 've
+
+        r'(["“])([^"”]+)(["”])': r'\1 \2 \3',       # "hello there" -> " hello there "
+
+        r"([\S])([\(\)\[\]\{\}])([\S])" : r"\1 \2 \3",  # ()[]{} -> ( ) [ ] { }
+
+        r"([\S])([\.,!?:;]) ": r"\1 \2 ",           # hello, there  -> hello , there
+        r"([\S\.,!?;])([\.,!?;])$": r"\1 \2 ",      # hello, -> hello , 
+    }
+
+    for message in member_data_copy:
+        contents_replaced = message['Contents']
+
+        for rule, replacement in rules.items():
+            contents_replaced = re.sub(rule, replacement, contents_replaced)
+
+        message['Contents'] = contents_replaced
+
+    return member_data_copy
+
+
+def tokenize_data(member_data, tokenizer):
+    member_data_copy = [message.copy() for message in member_data]
+
+    for message in member_data_copy:
+        message['Contents'] = tokenizer.encode(message['Contents']).ids
+
+    return member_data_copy
+
+
 def count_messages_equaling_content(data, content):
     return len([message for message in data if content == message['Contents']])
 
@@ -70,7 +119,20 @@ if __name__ == "__main__":
     members_data = [remove_short_messages(data) for data in members_data]
     members_data = [remove_long_messages(data) for data in members_data]
     members_data = [remove_contents_with_link(data) for data in members_data]
+    members_data = [remove_quotes(data) for data in members_data]
     members_data = remove_messages_in_common(members_data)
+    members_data = [pad_special_characters(data) for data in members_data]
 
+    tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
+
+    members_data = [tokenize_data(data, tokenizer) for data in members_data]
+
+    
     for member_data in members_data:
-        print(len(member_data))
+        num_tokens = 0
+        for message in member_data:
+            num_tokens += len(message['Contents'])
+
+        print(num_tokens)
+
+
