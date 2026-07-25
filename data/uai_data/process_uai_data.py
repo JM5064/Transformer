@@ -91,9 +91,7 @@ def remove_messages_in_common(members_data):
     return refined_members_data
 
 
-def pad_special_characters(member_data):
-    member_data_copy = [message.copy() for message in member_data]
-
+def preprocess_contents(contents):
     rules = {
         r"([0-9]+),([0-9])+": r"\1 @,@ \2",         # 1,000         -> 1 @,@ 000
         r"([0-9]+)\.([0-9])+": r"\1 @.@ \2",        # 3.14          -> 3 @.@ 14
@@ -113,12 +111,18 @@ def pad_special_characters(member_data):
         r"([\S\.,!?;])([\.,!?;])$": r"\1 \2 ",      # hello, -> hello , 
     }
 
+    for rule, replacement in rules.items():
+        contents = re.sub(rule, replacement, contents)
+
+    return contents
+
+
+def preprocess_member_data(member_data):
+    member_data_copy = [message.copy() for message in member_data]
+
     for message in member_data_copy:
-        contents_replaced = message['Contents']
-
-        for rule, replacement in rules.items():
-            contents_replaced = re.sub(rule, replacement, contents_replaced)
-
+        contents_replaced = preprocess_contents(message['Contents'])
+        
         message['Contents'] = contents_replaced
 
     return member_data_copy
@@ -167,13 +171,13 @@ if __name__ == "__main__":
     members_data = [remove_quotes(data) for data in members_data]
     members_data = [remove_duplicate_messages(data) for data in members_data]
     members_data = remove_messages_in_common(members_data)
-    members_data = [pad_special_characters(data) for data in members_data]
+    members_data = [preprocess_member_data(data) for data in members_data]
 
     # tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
     # members_data = [tokenize_data(data, tokenizer) for data in members_data]
 
     
-    # for member_data in members_data:
-    #     print(len(member_data))
+    for member_data in members_data:
+        print(len(member_data))
 
 

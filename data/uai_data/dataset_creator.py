@@ -11,7 +11,7 @@ def filter_members_data(members_data):
     # Speeds up filtering. Remove this if using an alternate splitting scheme:
     members_data = [member_data[:10000] for member_data in members_data]
 
-    members_data = [pad_special_characters(data) for data in members_data]
+    members_data = [preprocess_member_data(data) for data in members_data]
 
     return members_data
 
