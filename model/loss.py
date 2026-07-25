@@ -20,8 +20,7 @@ class CrossEntropyLoss(nn.Module):
 
         # Get probabilities of the true values in the prediction
         log_probs = torch.log_softmax(preds, dim=-1)
-
-        nll = -log_probs.gather(dim=2, index=labels.unsqueeze(-1)).squeeze(-1)
+        nll = -log_probs.gather(dim=-1, index=labels.unsqueeze(-1)).squeeze(-1)
         smooth = -log_probs.mean(dim=-1)
 
         loss = (1 - self.label_smoothing) * nll + self.label_smoothing * smooth
