@@ -11,6 +11,18 @@ def load_json(file_path):
     return data
 
 
+def save_to_file(data, file_path, indent=None):
+    """Save data to json file
+
+    Args:
+        data (dict): object to save
+        file_path (str): file name to save data to
+        indent (int|str, optional): indent character/size for file, default None
+    """
+    with open(file_path, "w", encoding="utf-8") as file:
+        json.dump(data, file, ensure_ascii=False, indent=indent)
+
+
 def remove_short_messages(member_data, min_length=5):
     """Removes short messages from a person's dataset"""
     return [message for message in member_data if len(message['Contents']) >= min_length]
@@ -21,7 +33,7 @@ def remove_long_messages(member_data, max_length=1000):
     return [message for message in member_data if len(message['Contents']) <= max_length]
 
 
-def remove_contents_with_link(member_data):
+def remove_messages_with_links(member_data):
     """Removes messages with urls from a person's dataset"""
     return [message for message in member_data if 
             ('http' not in message['Contents'] and '://' not in message['Contents'])]
@@ -37,6 +49,21 @@ def lowercase_member_data(member_data):
     for message in member_data_copy:
         message['Contents'] = message['Contents'].lower()
     
+    return member_data_copy
+
+
+def remove_duplicate_messages(member_data):
+    """Removes duplicate messages from a person's dataset"""
+    all_messages = set()
+    member_data_copy = []
+
+    for message in member_data:
+        contents = message['Contents']
+
+        if contents not in all_messages:
+            all_messages.add(contents)
+            member_data_copy.append(message)
+
     return member_data_copy
 
 
@@ -106,6 +133,24 @@ def tokenize_data(member_data, tokenizer):
     return member_data_copy
 
 
+def remove_messages_over_tokens(tokenized_member_data, max_tokens=128):
+    return [message for message in tokenized_member_data if len(message['Contents']) <= max_tokens]
+
+
+def pad_member_data(tokenizer_member_data, max_tokens=128, PAD_index=1):
+    tokenized_member_data_copy = [message.copy() for message in tokenizer_member_data]
+
+    for message in tokenized_member_data_copy:
+        amount_to_pad = max_tokens - len(message['Contents'])
+        message['Contents'].extend([PAD_index] * amount_to_pad)
+
+    return tokenized_member_data_copy
+
+
+def to_contents(member_data):
+    return [message['Contents'] for message in member_data]
+
+
 def count_messages_equaling_content(data, content):
     return len([message for message in data if content == message['Contents']])
 
@@ -117,22 +162,18 @@ if __name__ == "__main__":
 
     # Filter data
     members_data = [remove_short_messages(data) for data in members_data]
-    members_data = [remove_long_messages(data) for data in members_data]
-    members_data = [remove_contents_with_link(data) for data in members_data]
+    # members_data = [remove_long_messages(data) for data in members_data]
+    members_data = [remove_messages_with_links(data) for data in members_data]
     members_data = [remove_quotes(data) for data in members_data]
+    members_data = [remove_duplicate_messages(data) for data in members_data]
     members_data = remove_messages_in_common(members_data)
     members_data = [pad_special_characters(data) for data in members_data]
 
-    tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
-
-    members_data = [tokenize_data(data, tokenizer) for data in members_data]
+    # tokenizer = Tokenizer.from_file("data/wikitext103/hf_data_json.json")
+    # members_data = [tokenize_data(data, tokenizer) for data in members_data]
 
     
-    for member_data in members_data:
-        num_tokens = 0
-        for message in member_data:
-            num_tokens += len(message['Contents'])
-
-        print(num_tokens)
+    # for member_data in members_data:
+    #     print(len(member_data))
 
 
