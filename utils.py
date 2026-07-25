@@ -30,12 +30,14 @@ def log_results(file_path, metrics):
     os.fsync(file.fileno())
 
 
-def load_checkpoint(checkpoint_path, model, optimizer, scheduler):
+def load_checkpoint(checkpoint_path, model, optimizer=None, scheduler=None):
     checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
 
     model.load_state_dict(checkpoint['state_dict'])
-    optimizer.load_state_dict(checkpoint['optimizer'])
-    scheduler.load_state_dict(checkpoint['scheduler'])
+    if optimizer:
+        optimizer.load_state_dict(checkpoint['optimizer'])
+    if scheduler:
+        scheduler.load_state_dict(checkpoint['scheduler'])
 
     return model, optimizer, scheduler, checkpoint['epoch']
     

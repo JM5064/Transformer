@@ -8,9 +8,12 @@ import torch
 from utils import DEVICE, log_results
 
 
-def validate(model, val_loader, loss_func):
+def validate(model, val_loader, loss_func, classification=False):
     model.eval()
     total_loss = 0.0
+
+    total_correct = 0
+    total_predicted = 0
     
     with torch.no_grad():
         for X, Y in val_loader:
@@ -22,11 +25,22 @@ def validate(model, val_loader, loss_func):
             loss = loss_func(preds, Y)
             total_loss += loss.item()
 
+            if classification:
+                pred_classes = preds.argmax(dim=1)
+                num_correct = (pred_classes == Y).float().sum()
+
+                total_correct += num_correct
+                total_predicted += len(pred_classes)
+
     average_val_loss = total_loss / len(val_loader)
     
     metrics = {
         "average_val_loss": average_val_loss,
     }
+
+    if classification:
+        accuracy = total_correct / total_predicted
+        metrics["accuracy"] = accuracy
 
     return metrics
 
@@ -42,6 +56,7 @@ def train(
         num_epochs,
         start_epoch=0,
         val_every=1007,
+        classification=False,
         runs_dir="runs",
     ):
     log_directory = runs_dir
@@ -82,13 +97,16 @@ def train(
                 average_train_loss = total_loss / val_every
                 total_loss = 0.0
 
-                metrics = validate(model, val_loader, loss_func)
+                metrics = validate(model, val_loader, loss_func, classification=classification)
                 metrics["average_train_loss"] = average_train_loss
 
                 print(f'Step {step_num} Results:')
 
                 print(f'Train Loss: {average_train_loss}')
                 print(f'Val Loss:   {metrics["average_val_loss"]}')
+
+                if classification:
+                    print(f'Accuracy:   {metrics["accuracy"]}')
 
                 log_results(log_directory + "/metrics.csv", metrics)
 
